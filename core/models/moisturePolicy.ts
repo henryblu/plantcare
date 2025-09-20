@@ -1,4 +1,4 @@
-export type HumidityPreference = 'low' | 'medium' | 'high';
+﻿export type HumidityPreference = 'low' | 'medium' | 'high';
 export type LightRequirement = 'low' | 'medium' | 'bright-indirect' | 'full-sun';
 
 export interface MoisturePolicy {
@@ -24,21 +24,26 @@ export function isMoisturePolicy(value: unknown): value is MoisturePolicy {
   if (typeof value !== 'object' || value === null) return false;
   const candidate = value as Record<string, unknown>;
 
-  if (!Number.isInteger(candidate.waterIntervalDays)) return false;
-  if (candidate.waterIntervalDays < 0 || candidate.waterIntervalDays > MAX_THRESHOLD) return false;
+  const waterInterval = candidate.waterIntervalDays;
+  if (typeof waterInterval !== 'number' || !Number.isInteger(waterInterval)) return false;
+  if (waterInterval < 0 || waterInterval > MAX_THRESHOLD) return false;
 
-  if (typeof candidate.soilMoistureThreshold !== 'number') return false;
-  if (candidate.soilMoistureThreshold < 0 || candidate.soilMoistureThreshold > MAX_THRESHOLD) return false;
+  const soilThreshold = candidate.soilMoistureThreshold;
+  if (typeof soilThreshold !== 'number') return false;
+  if (soilThreshold < 0 || soilThreshold > MAX_THRESHOLD) return false;
 
-  if (typeof candidate.humidityPreference !== 'string') return false;
-  if (!HUMIDITY_OPTIONS.includes(candidate.humidityPreference as HumidityPreference)) return false;
+  const humidity = candidate.humidityPreference;
+  if (typeof humidity !== 'string') return false;
+  if (!HUMIDITY_OPTIONS.includes(humidity as HumidityPreference)) return false;
 
-  if (typeof candidate.lightRequirement !== 'string') return false;
-  if (!LIGHT_OPTIONS.includes(candidate.lightRequirement as LightRequirement)) return false;
+  const light = candidate.lightRequirement;
+  if (typeof light !== 'string') return false;
+  if (!LIGHT_OPTIONS.includes(light as LightRequirement)) return false;
 
-  if (!Array.isArray(candidate.notes)) return false;
-  if (candidate.notes.length > MAX_NOTES) return false;
-  if (!candidate.notes.every((note) => typeof note === 'string' && note.trim().length > 0 && note.length <= 160)) {
+  const notes = candidate.notes;
+  if (!Array.isArray(notes)) return false;
+  if (notes.length > MAX_NOTES) return false;
+  if (!notes.every((note) => typeof note === 'string' && note.trim().length > 0 && note.length <= 160)) {
     return false;
   }
 
@@ -50,6 +55,9 @@ export function clampMoisturePolicy(policy: MoisturePolicy): MoisturePolicy {
     ...policy,
     waterIntervalDays: Math.max(0, Math.min(MAX_THRESHOLD, Math.round(policy.waterIntervalDays))),
     soilMoistureThreshold: Math.max(0, Math.min(MAX_THRESHOLD, Math.round(policy.soilMoistureThreshold))),
-    notes: policy.notes.slice(0, MAX_NOTES).map((note) => note.trim()).filter(Boolean),
+    notes: policy.notes
+      .slice(0, MAX_NOTES)
+      .map((note) => note.trim().slice(0, 160))
+      .filter((note) => note.length > 0),
   };
 }

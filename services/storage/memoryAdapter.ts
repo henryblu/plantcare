@@ -1,4 +1,4 @@
-import { StorageAdapter } from './adapter';
+﻿import { StorageAdapter } from './adapter';
 
 type Serializable = string | number | boolean | null | undefined | Serializable[] | { [key: string]: Serializable };
 
@@ -27,9 +27,9 @@ export const createMemoryStorage = (): MemoryStorageAdapter => {
   const store = new Map<string, Serializable>();
 
   return {
-    async getItem(key) {
+    async getItem<T = unknown>(key: string): Promise<T | null> {
       if (!store.has(key)) return null;
-      return deepClone(store.get(key) as Serializable) as unknown;
+      return deepClone(store.get(key) as Serializable) as T;
     },
     async setItem(key, value) {
       store.set(key, deepClone(value as Serializable));

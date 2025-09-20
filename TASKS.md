@@ -1,4 +1,4 @@
-# Smart Plant – Execution Checklist
+﻿# Smart Plant – Execution Checklist
 
 ## Phase 0 — Repo & Environment
 - [x] Create repo structure (`app/`, `core/`, `services/`, `config/`, `docs/`, `assets/`, `scripts/`, `tests/`).
@@ -16,29 +16,29 @@
 - ✅ **Done when**: A dummy plant persists across restarts.
 
 ## Phase 2 — Identification (PlantNet)
-- [ ] Implement `services/id/plantNet.ts` for photo upload and candidate parsing.
-- [ ] Implement `services/id/provider.ts` to switch between real PlantNet and mocks.
-- [ ] Normalize species key (prefer `taxonId`, else normalized canonical name).
-- [ ] Provide manual species/type entry fallback for offline demos.
+- [x] Implement `services/id/plantNet.ts` for photo upload and candidate parsing.
+- [x] Implement `services/id/provider.ts` to switch between real PlantNet and mocks.
+- [x] Normalize species key (prefer `taxonId`, else normalized canonical name).
+- [x] Provide manual species/type entry fallback for offline demos.
 - ✅ **Done when**: Photo (or mock) returns `{canonicalName, commonName?, taxonId?, score}`.
 
 ## Phase 3 — Policy Generation (ChatGPT)
-- [ ] Implement `services/policy/chatgpt.ts` with strict JSON prompt template.
-- [ ] Validate responses against schema, clamp values, retry once if invalid.
-- [ ] Seed default policies per type (succulent, semi-succulent, tropical, fern).
-- [ ] Add validators/clamps in `core/logic/policySchema.ts`.
+- [x] Implement `services/policy/chatgpt.ts` with strict JSON prompt template.
+- [x] Validate responses against schema, clamp values, retry once if invalid.
+- [x] Seed default policies per type (succulent, semi-succulent, tropical, fern).
+- [x] Add validators/clamps in `core/logic/policySchema.ts`.
 - ✅ **Done when**: Cache miss yields valid `SpeciesProfile` or safe default.
 
 ## Phase 4 — Orchestration Flows
-- [ ] Build `core/orchestration/createPlantFlow.ts` for end-to-end add flow.
-- [ ] Build `core/orchestration/cacheFlow.ts` with TTL logic (180 days) and `forceRefresh` support.
+- [x] Build `core/orchestration/createPlantFlow.ts` for end-to-end add flow.
+- [x] Build `core/orchestration/cacheFlow.ts` with TTL logic (180 days) and `forceRefresh` support.
 - ✅ **Done when**: Flow persists plant with species + policy, reusing cache when available.
 
 ## Phase 5 — UI (Thin Pass)
-- [ ] Add navigation with Home, AddPlant, Settings screens.
-- [ ] Implement AddPlant flow (photo picker → candidates → confirm → createPlantFlow).
-- [ ] Implement Home (empty state or PlantCard with summary).
-- [ ] Implement Settings (mock/real toggles, clear cache/data).
+- [x] Add navigation with Home, AddPlant, Settings screens.
+- [x] Implement AddPlant flow (photo picker → candidates → confirm → createPlantFlow).
+- [x] Implement Home (empty state or PlantCard with summary).
+- [x] Implement Settings (mock/real toggles, clear cache/data).
 - ✅ **Done when**: Plant added via photo appears on Home with policy summary.
 
 ## Phase 6 — Errors, Fallbacks & Resilience
@@ -65,3 +65,6 @@
 - [ ] Document API contracts in `docs/API_CONTRACTS.md`.
 - [ ] Capture operations guide in `docs/OPERATIONS.md` (env setup, flags, mock/real switching).
 - ✅ **Done when**: Teammate can clone repo and reproduce demo in ≤10 minutes.
+
+
+
