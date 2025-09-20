@@ -1,18 +1,18 @@
 # Smart Plant – Execution Checklist
 
 ## Phase 0 — Repo & Environment
-- [ ] Create repo structure (`app/`, `core/`, `services/`, `config/`, `docs/`, `assets/`, `scripts/`, `tests/`).
-- [ ] Add `PROJECT_BRIEF.md`, `docs/API_CONTRACTS.md`, `docs/SCHEMAS.md`, and `TASKS.md` baselines.
-- [ ] Provide `.env.sample` with `PLANTNET_API_KEY` and `OPENAI_API_KEY` placeholders.
-- [ ] Add feature flags in `config/featureFlags.ts` (`FEATURE_PLANTNET`, `FEATURE_CHATGPT`, `USE_MOCKS`).
-- [ ] Document run instructions (mock vs real) in `README.md`.
+- [x] Create repo structure (`app/`, `core/`, `services/`, `config/`, `docs/`, `assets/`, `scripts/`, `tests/`).
+- [x] Add `PROJECT_BRIEF.md`, `docs/API_CONTRACTS.md`, `docs/SCHEMAS.md`, and `TASKS.md` baselines.
+- [x] Provide `.env.sample` with `PLANTNET_API_KEY` and `OPENAI_API_KEY` placeholders.
+- [x] Add feature flags in `config/featureFlags.ts` (`FEATURE_PLANTNET`, `FEATURE_CHATGPT`, `USE_MOCKS`).
+- [x] Document run instructions (mock vs real) in `README.md`.
 - ✅ **Done when**: App launches to a blank Home screen; env and flags are documented.
 
 ## Phase 1 — Data Contracts & Store
-- [ ] Define models (`Plant`, `SpeciesProfile`, `MoisturePolicy`) in `core/models/*`.
-- [ ] Mirror JSON schemas in `docs/SCHEMAS.md` with runtime types.
-- [ ] Implement store in `core/state/store.ts` (plants[], speciesCache{}).
-- [ ] Add persistence wrappers in `services/storage/*`.
+- [x] Define models (`Plant`, `SpeciesProfile`, `MoisturePolicy`) in `core/models/*`.
+- [x] Mirror JSON schemas in `docs/SCHEMAS.md` with runtime types.
+- [x] Implement store in `core/state/store.ts` (plants[], speciesCache{}).
+- [x] Add persistence wrappers in `services/storage/*`.
 - ✅ **Done when**: A dummy plant persists across restarts.
 
 ## Phase 2 — Identification (PlantNet)
