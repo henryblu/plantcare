@@ -1,4 +1,4 @@
-import type { IncomingMessage } from "node:http";
+﻿import type { IncomingMessage } from "node:http";
 import { defineConfig, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react";
 import fs from "node:fs";
@@ -299,6 +299,7 @@ export default defineConfig({
     alias: {
       "@core": path.resolve(__dirname, "core"),
       "@services": path.resolve(__dirname, "services"),
+      "@app": path.resolve(__dirname, "app/src"),
       "@config": path.resolve(__dirname, "config"),
     },
   },
@@ -308,6 +309,7 @@ export default defineConfig({
         "..",
         path.resolve(__dirname, "core"),
         path.resolve(__dirname, "services"),
+        path.resolve(__dirname, "app/src"),
         path.resolve(__dirname, "config"),
       ],
     },

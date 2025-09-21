@@ -2,6 +2,8 @@ import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "re
 import type { SpeciesProfile, SpeciesType } from "@core/models/speciesProfile";
 import type { IdentificationCandidate } from "@services/id/types";
 import type { PolicyGenerationRequest } from "@services/policy/chatgpt";
+import { ImageValidationError, prepareImageFile } from "@app/utils/imageProcessing";
+import { PlantNetError } from "@services/id/plantNet";
 import { usePlantCareServices } from "../providers/PlantCareProvider";
 
 const SPECIES_TYPE_OPTIONS: SpeciesType[] = [
@@ -38,6 +40,15 @@ interface ManualEntryDraft {
   commonName: string;
   type: SpeciesType;
 }
+
+interface ProcessedImageMeta {
+  width: number;
+  height: number;
+  originalWidth: number;
+  originalHeight: number;
+  wasDownscaled: boolean;
+}
+
 
 interface ManualEntryFormProps {
   draft: ManualEntryDraft;
@@ -221,6 +232,7 @@ const AddPlantScreen = () => {
   } = usePlantCareServices();
 
   const [file, setFile] = useState<File | null>(null);
+  const [imageMeta, setImageMeta] = useState<ProcessedImageMeta | null>(null);
   const [candidates, setCandidates] = useState<IdentificationCandidate[]>([]);
   const [profiles, setProfiles] = useState<Record<string, SpeciesProfile>>({});
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
@@ -234,6 +246,7 @@ const AddPlantScreen = () => {
     type: "other",
   });
 
+  const fileProcessRef = useRef(0);
   const latestRunRef = useRef(0);
 
   useEffect(() => {
@@ -272,11 +285,58 @@ const AddPlantScreen = () => {
     setError(null);
   };
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const selected = event.target.files?.[0] ?? null;
-    setFile(selected);
+    const token = fileProcessRef.current + 1;
+    fileProcessRef.current = token;
+
+    setFile(null);
+    setImageMeta(null);
     resetResults();
-    setManualMode(false);
+
+    if (!selected) {
+      return;
+    }
+
+    setStatus("Processing image...");
+
+    try {
+      const prepared = await prepareImageFile(selected);
+      if (fileProcessRef.current !== token) {
+        return;
+      }
+
+      setFile(prepared.file);
+      setImageMeta({
+        width: prepared.width,
+        height: prepared.height,
+        originalWidth: prepared.originalWidth,
+        originalHeight: prepared.originalHeight,
+        wasDownscaled: prepared.wasDownscaled,
+      });
+      setStatus(
+        prepared.wasDownscaled
+          ? `Image optimized to ${prepared.width}x${prepared.height}px (down from ${prepared.originalWidth}x${prepared.originalHeight}px).`
+          : `Image ready (${prepared.width}x${prepared.height}px).`,
+      );
+      setError(null);
+      if (plantNetConfigured) {
+        setManualMode(false);
+      }
+    } catch (err) {
+      if (fileProcessRef.current !== token) {
+        return;
+      }
+      const message =
+        err instanceof ImageValidationError
+          ? err.message
+          : (err as Error).message ?? "Could not process the selected image.";
+      setStatus(null);
+      setError(message);
+      setFile(null);
+      setImageMeta(null);
+      event.target.value = "";
+    }
   };
 
   const runPolicyForCandidate = async (
@@ -323,7 +383,7 @@ const AddPlantScreen = () => {
       return;
     }
     if (!file) {
-      setError("Choose a plant photo to continue.");
+      setError("Choose a prepared plant photo (JPEG/PNG/WEBP, at least 512x512) before identifying.");
       return;
     }
 
@@ -350,7 +410,11 @@ const AddPlantScreen = () => {
     } catch (err) {
       if (latestRunRef.current === runToken) {
         setStatus(null);
-        setError((err as Error).message ?? "Failed to identify species. Try manual entry.");
+        const message =
+          err instanceof PlantNetError
+            ? err.message
+            : (err as Error).message ?? "Failed to identify species. Try manual entry.";
+        setError(message);
         setManualMode(true);
       }
       return;
@@ -424,7 +488,21 @@ const AddPlantScreen = () => {
         <div className="form-grid">
           <label>
             Plant photo
-            <input type="file" accept="image/*" onChange={handleFileChange} disabled={isProcessing} />
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleFileChange}
+              disabled={isProcessing}
+            />
+            {imageMeta && (
+              <small className="muted-text">
+                Prepared image: {imageMeta.width}x{imageMeta.height}px
+                {imageMeta.wasDownscaled ? (
+                  <> (down from {imageMeta.originalWidth}x{imageMeta.originalHeight}px)</>
+                ) : null}
+                .
+              </small>
+            )}
           </label>
         </div>
 

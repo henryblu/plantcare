@@ -165,35 +165,22 @@ const buildSystemPrompt = (): string =>
   ].join('\n');
 
 const formatUserPrompt = (request: PolicyGenerationRequest, fallbackType: SpeciesType): string => {
-  const hints = (request.hints ?? [])
-    .map(sanitizeHint)
-    .filter((hint) => hint.length > 0);
-
-  const typeLine = request.type
-    ? `Suggested species type: ${request.type}`
-    : `Suggested species type: ${fallbackType} (best guess)`;
-
-  const lines: string[] = [
-    `Species canonical name: ${request.canonicalName}`,
-    `Species key: ${request.speciesKey}`,
-    typeLine,
-  ];
-
+  const speciesType = request.type ?? fallbackType;
+  const payload: Record<string, string> = {
+    canonicalName: request.canonicalName,
+  };
   if (request.commonName) {
-    lines.push(`Common name: ${request.commonName}`);
+    payload.commonName = request.commonName;
   }
+  payload.type = speciesType;
+  const payloadJson = JSON.stringify(payload, null, 2);
 
-  if (typeof request.confidence === 'number') {
-    lines.push(`Identification confidence: ${(request.confidence * 100).toFixed(1)}%`);
-  }
-
-  if (hints.length > 0) {
-    lines.push('Additional cues:');
-    hints.forEach((hint) => lines.push(`- ${hint}`));
-  }
-
-  lines.push('Generate the policy JSON now.');
-  return lines.join('\n');
+  return [
+    'Use the species information below to craft a moisture policy JSON.',
+    'Respond with a single JSON object only. Do not include explanations, markdown, or extra keys.',
+    'Species:',
+    payloadJson,
+  ].join('\n');
 };
 
 const mapSeedPolicies = (
@@ -285,7 +272,7 @@ export class ChatGptPolicyService {
         conversation.push({ role: 'assistant', content: lastContent ?? '' });
         conversation.push({
           role: 'user',
-          content: `The previous JSON was invalid because: ${guidance}. Reply with corrected JSON only.`,
+          content: `Your previous reply was invalid JSON (${guidance}). Respond with a valid JSON object only. No explanations.`,
         });
       }
     }
@@ -417,7 +404,3 @@ export const getDefaultPolicySeeds = (): Record<SpeciesType, MoisturePolicy> => 
   fern: cloneMoisturePolicy(DEFAULT_POLICY_SEEDS.fern),
   other: cloneMoisturePolicy(DEFAULT_POLICY_SEEDS.other),
 });
-
-
-
-

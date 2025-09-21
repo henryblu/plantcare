@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+﻿import { describe, expect, it, vi } from 'vitest';
 import { createChatGptPolicyService, type PolicyGenerationRequest } from './chatgpt';
 
 describe('ChatGptPolicyService', () => {
@@ -22,6 +22,16 @@ describe('ChatGptPolicyService', () => {
   it('resolves relative proxy endpoint before invoking fetch', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+      const body = JSON.parse((init?.body as string) ?? "{}") as {
+        messages: { role: string; content: string }[];
+        response_format: { type: string };
+      };
+      const userMessage = body.messages.find((message) => message.role === "user")?.content ?? "";
+      expect(body.response_format).toEqual({ type: "json_object" });
+      expect(userMessage).toContain("\"canonicalName\": \"Ficus lyrata\"");
+      expect(userMessage).toContain("\"type\": \"tropical\"");
+      expect(userMessage).not.toContain("speciesKey");
+      expect(userMessage).not.toContain("confidence");
       expect(url).toBe('http://localhost/api/openai/policy');
       expect(init?.method).toBe('POST');
 
