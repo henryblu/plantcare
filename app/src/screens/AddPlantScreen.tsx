@@ -59,10 +59,14 @@ const ManualEntryForm = ({ draft, onChange, onSubmit, disabled }: ManualEntryFor
   const isSubmitDisabled = disabled || draft.canonicalName.trim().length === 0;
 
   return (
-    <form className="card" style={{ marginTop: "1rem" }} onSubmit={onSubmit}>
-      <h4>Manual species entry</h4>
-      <p>Provide a canonical species name when PlantNet is unavailable or returns poor matches.</p>
-      <div className="form-grid" style={{ marginTop: "1rem" }}>
+    <form className="card card--form" onSubmit={onSubmit}>
+      <div>
+        <h4>Manual species entry</h4>
+        <p className="muted-text">
+          Provide a canonical species name when PlantNet is unavailable or returns poor matches.
+        </p>
+      </div>
+      <div className="form-grid split">
         <label>
           Canonical name
           <input
@@ -95,7 +99,7 @@ const ManualEntryForm = ({ draft, onChange, onSubmit, disabled }: ManualEntryFor
           </select>
         </label>
       </div>
-      <div className="button-row" style={{ marginTop: "1rem" }}>
+      <div className="button-row">
         <button className="secondary-button" type="submit" disabled={isSubmitDisabled}>
           Generate care guide
         </button>
@@ -115,8 +119,11 @@ const CandidateList = ({ candidates, selectedKey, onSelect, disabled }: Candidat
   if (!candidates.length) return null;
 
   return (
-    <div className="card" style={{ marginTop: "1rem" }}>
-      <h4>Species candidates</h4>
+    <section className="card card--list">
+      <div className="summary-header">
+        <h4>Species candidates</h4>
+        <p className="muted-text">Pick the closest match to refine the generated care guide.</p>
+      </div>
       <div className="candidate-list">
         {candidates.map((candidate) => {
           const key = candidate.speciesKey;
@@ -140,13 +147,13 @@ const CandidateList = ({ candidates, selectedKey, onSelect, disabled }: Candidat
               </div>
               <div className="candidate-meta">
                 <span>Confidence: {formatPercentage(candidate.score)}</span>
-                <span>Source: {candidate.source}</span>
+                {candidate.source && <span>Source: {candidate.source}</span>}
               </div>
             </label>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 };
 
@@ -156,38 +163,52 @@ interface PolicySummaryProps {
 }
 
 const PolicySummary = ({ candidate, profile }: PolicySummaryProps) => (
-  <div className="card" style={{ marginTop: "1rem" }}>
-    <h4>{candidate.canonicalName}</h4>
-    {candidate.commonName && <p>Common name: {candidate.commonName}</p>}
-    <p>Identification confidence: {formatPercentage(candidate.score)}</p>
-    <p>Species key: {candidate.speciesKey}</p>
-
-    <div style={{ marginTop: "1rem" }}>
-      <h5>Moisture Policy</h5>
-      <p>
-        Water every <strong>{profile.moisturePolicy.waterIntervalDays}</strong> days.
-      </p>
-      <p>
-        Soil moisture threshold: <strong>{profile.moisturePolicy.soilMoistureThreshold}%</strong>.
-      </p>
-      <p>
-        Humidity preference: <strong>{profile.moisturePolicy.humidityPreference}</strong>.
-      </p>
-      <p>
-        Light requirement: <strong>{profile.moisturePolicy.lightRequirement}</strong>.
-      </p>
-      {profile.moisturePolicy.notes.length > 0 && (
-        <div>
-          <strong>Care notes:</strong>
-          <ul className="notes-list">
-            {profile.moisturePolicy.notes.map((note, index) => (
-              <li key={index}>{note}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+  <section className="card card--summary">
+    <div className="summary-header">
+      <h3>{candidate.canonicalName}</h3>
+      {candidate.commonName && <span className="muted-text">Also known as {candidate.commonName}</span>}
     </div>
-  </div>
+
+    <div className="badge-row">
+      <span className="chip chip--outline">Confidence {formatPercentage(candidate.score)}</span>
+      {candidate.source && <span className="chip chip--outline">Source {candidate.source}</span>}
+      <span className="chip chip--outline">Species {candidate.speciesKey}</span>
+    </div>
+
+    <dl className="policy-grid">
+      <div>
+        <dt>Watering cadence</dt>
+        <dd>
+          Water every <strong>{profile.moisturePolicy.waterIntervalDays}</strong> days
+        </dd>
+      </div>
+      <div>
+        <dt>Moisture threshold</dt>
+        <dd>
+          Keep soil at <strong>{profile.moisturePolicy.soilMoistureThreshold}%</strong>
+        </dd>
+      </div>
+      <div>
+        <dt>Humidity preference</dt>
+        <dd>{profile.moisturePolicy.humidityPreference}</dd>
+      </div>
+      <div>
+        <dt>Light requirement</dt>
+        <dd>{profile.moisturePolicy.lightRequirement}</dd>
+      </div>
+    </dl>
+
+    {profile.moisturePolicy.notes.length > 0 && (
+      <div className="notes-section">
+        <strong>Care notes</strong>
+        <ul className="notes-list">
+          {profile.moisturePolicy.notes.map((note, index) => (
+            <li key={index}>{note}</li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </section>
 );
 
 const AddPlantScreen = () => {
@@ -376,57 +397,79 @@ const AddPlantScreen = () => {
   };
 
   return (
-    <div className="card">
-      <h3>Plant Care Guide</h3>
-      <p>Upload a plant photo or enter the species manually to generate a tailored moisture policy.</p>
-
-      <div className="form-grid" style={{ marginTop: "1rem" }}>
-        <label>
-          Plant photo
-          <input type="file" accept="image/*" onChange={handleFileChange} disabled={isProcessing} />
-        </label>
-      </div>
-
-      <div className="button-row" style={{ marginTop: "1rem" }}>
-        <button className="primary-button" onClick={handleIdentify} disabled={isProcessing || !file || !plantNetConfigured}>
-          {isProcessing ? "Working..." : "Identify & Generate"}
-        </button>
-        <button
-          className="secondary-button"
-          type="button"
-          onClick={() => setManualMode((value) => !value)}
-          disabled={isProcessing}
-        >
-          {manualMode ? "Hide manual entry" : "Enter species manually"}
-        </button>
-      </div>
-
-      {!plantNetConfigured && (
-        <div className="error-banner" style={{ marginTop: "1rem" }}>
-          PlantNet service is not configured. Set <code>PLANTNET_API_KEY</code> and restart the dev server, or use manual entry below.
+    <div className="content-stack">
+      <section className="page-hero">
+        <div>
+          <h1>Plant Care Guide</h1>
+          <p>Upload a plant photo or enter the species manually to craft a personalised moisture policy.</p>
         </div>
-      )}
-
-      {!openAiConfigured && (
-        <div className="status-banner" style={{ marginTop: "1rem" }}>
-          Policy service fallback in use. Seeded defaults will be applied when ChatGPT is unavailable.
+        <div className="hero-status">
+          <span className={`chip ${plantNetConfigured ? "chip--success" : "chip--warning"}`}>
+            {plantNetConfigured ? "PlantNet connected" : "PlantNet needs setup"}
+          </span>
+          <span className={`chip ${openAiConfigured ? "chip--success" : "chip--info"}`}>
+            {openAiConfigured ? "AI guidance live" : "Using default policies"}
+          </span>
         </div>
-      )}
+      </section>
 
-      {status && (
-        <div className="status-banner" style={{ marginTop: "1rem" }}>
-          {status}
+      <section className="card card--form">
+        <div>
+          <h3>Identify your plant</h3>
+          <p className="muted-text">
+            Upload a clear photo to identify likely species or toggle manual entry if you already know the name.
+          </p>
         </div>
-      )}
 
-      {error && (
-        <div className="error-banner" style={{ marginTop: "1rem" }}>
-          {error}
+        <div className="form-grid">
+          <label>
+            Plant photo
+            <input type="file" accept="image/*" onChange={handleFileChange} disabled={isProcessing} />
+          </label>
         </div>
-      )}
+
+        <div className="button-row">
+          <button
+            className="primary-button"
+            onClick={handleIdentify}
+            disabled={isProcessing || !file || !plantNetConfigured}
+          >
+            {isProcessing ? "Working..." : "Identify & Generate"}
+          </button>
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() => setManualMode((value) => !value)}
+            disabled={isProcessing}
+          >
+            {manualMode ? "Hide manual entry" : "Enter species manually"}
+          </button>
+        </div>
+
+        {!plantNetConfigured && (
+          <div className="error-banner">
+            PlantNet service is not configured. Set <code>PLANTNET_API_KEY</code> and restart the dev server, or use manual entry below.
+          </div>
+        )}
+
+        {!openAiConfigured && (
+          <div className="status-banner">
+            Policy service fallback in use. Seeded defaults will be applied when ChatGPT is unavailable.
+          </div>
+        )}
+
+        {status && <div className="status-banner">{status}</div>}
+
+        {error && <div className="error-banner">{error}</div>}
+      </section>
 
       {manualMode && (
-        <ManualEntryForm draft={manualDraft} onChange={setManualDraft} onSubmit={handleManualSubmit} disabled={isProcessing} />
+        <ManualEntryForm
+          draft={manualDraft}
+          onChange={setManualDraft}
+          onSubmit={handleManualSubmit}
+          disabled={isProcessing}
+        />
       )}
 
       <CandidateList
@@ -436,7 +479,9 @@ const AddPlantScreen = () => {
         disabled={isProcessing}
       />
 
-      {selectedCandidate && selectedProfile && <PolicySummary candidate={selectedCandidate} profile={selectedProfile} />}
+      {selectedCandidate && selectedProfile && (
+        <PolicySummary candidate={selectedCandidate} profile={selectedProfile} />
+      )}
     </div>
   );
 };
