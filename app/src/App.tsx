@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { getRuntimeServicesConfig } from "@config/environment";
 import {
   createIdentificationProvider,
   type IdentificationProvider,
@@ -12,36 +13,8 @@ import {
   getDefaultPolicySeeds,
   ChatGptPolicyService,
 } from "@services/policy/chatgpt";
+import { PlantCareProvider } from "./providers/PlantCareProvider";
 import AddPlantScreen from "./screens/AddPlantScreen";
-
-export interface UiConfig {
-  useMocks: boolean;
-  plantNetApiKey: string;
-  openAiApiKey: string;
-}
-
-declare global {
-  interface ImportMetaEnv {
-    VITE_PLANTNET_ENDPOINT?: string;
-    VITE_OPENAI_API_KEY?: string;
-    VITE_OPENAI_ENDPOINT?: string;
-  }
-
-  interface ImportMeta {
-    readonly env: ImportMetaEnv;
-  }
-}
-
-const readEnv = (key: keyof ImportMetaEnv): string => {
-  const fromMeta = typeof import.meta !== "undefined" ? import.meta.env?.[key] : undefined;
-  if (typeof fromMeta === "string" && fromMeta.length > 0) {
-    return fromMeta;
-  }
-  if (typeof process !== "undefined" && process.env && typeof process.env[key] === "string") {
-    return process.env[key] as string;
-  }
-  return "";
-};
 
 const bindFetch = (): typeof fetch => {
   if (typeof window !== "undefined" && typeof window.fetch === "function") {
@@ -51,21 +24,17 @@ const bindFetch = (): typeof fetch => {
 };
 
 const App = () => {
-  const plantNetEndpointSetting = readEnv("VITE_PLANTNET_ENDPOINT").trim();
-  const defaultPlantNetEndpoint = "/api/plantnet/identify";
-  const plantNetEndpoint = plantNetEndpointSetting || defaultPlantNetEndpoint;
-  const plantNetConfigured = plantNetEndpoint.startsWith("/") || plantNetEndpointSetting.length > 0;
-
-  const openAiApiKeyCandidate = readEnv("VITE_OPENAI_API_KEY").trim();
-  const openAiEndpointSetting = readEnv("VITE_OPENAI_ENDPOINT").trim();
-  const openAiEndpoint = openAiEndpointSetting || "/api/openai/policy";
-  const openAiUsesProxy = openAiEndpoint.startsWith("/");
-  const openAiApiKey = openAiUsesProxy ? "" : openAiApiKeyCandidate;
-  const openAiBaseConfigured = openAiUsesProxy || openAiEndpointSetting.length > 0 || openAiApiKey.length > 0;
-
-  console.info('[App] OpenAI endpoint', openAiEndpoint);
-  console.info('[App] OpenAI uses proxy', openAiUsesProxy);
+  const runtimeConfig = useMemo(getRuntimeServicesConfig, []);
   const fetchFn = useMemo(bindFetch, []);
+
+  const {
+    plantNet: { configured: plantNetConfigured, endpoint: plantNetEndpoint },
+    openAi: {
+      configured: openAiBaseConfigured,
+      endpoint: openAiEndpoint,
+      apiKey: openAiApiKey,
+    },
+  } = runtimeConfig;
 
   const identificationProvider = useMemo<IdentificationProvider | null>(() => {
     if (!plantNetConfigured) return null;
@@ -73,11 +42,8 @@ const App = () => {
       const options: PlantNetClientOptions = {
         fetchFn,
         defaultOrgans: ["leaf"],
+        endpoint: plantNetEndpoint,
       };
-
-      if (plantNetEndpoint) {
-        options.endpoint = plantNetEndpoint;
-      }
 
       const client = new PlantNetClient(options);
       return createIdentificationProvider({
@@ -85,46 +51,42 @@ const App = () => {
         plantNetClient: client,
       });
     } catch (error) {
-      console.error("Failed to initialise PlantNet client", error);
+      console.error("[App] Failed to initialise PlantNet client", error);
       return null;
     }
   }, [plantNetConfigured, plantNetEndpoint, fetchFn]);
 
   const policyService = useMemo<ChatGptPolicyService | null>(() => {
-    if (!openAiBaseConfigured) return null;
     try {
       return createChatGptPolicyService({
-        apiKey: openAiApiKey || undefined,
+        apiKey: openAiApiKey,
         endpoint: openAiEndpoint,
         seedPolicies: getDefaultPolicySeeds(),
         fetchFn,
       });
     } catch (error) {
-      console.error("Failed to initialise ChatGPT policy service", error);
+      console.error("[App] Failed to initialise ChatGPT policy service", error);
       return null;
     }
-  }, [openAiBaseConfigured, openAiApiKey, openAiEndpoint, fetchFn]);
+  }, [openAiApiKey, openAiEndpoint, fetchFn, openAiBaseConfigured]);
 
-  const openAiConfigured = Boolean(policyService);
+  const plantNetAvailable = plantNetConfigured && Boolean(identificationProvider);
+  const openAiReady = openAiBaseConfigured && Boolean(policyService);
 
   return (
-    <div className="app-shell">
-      <main className="app-content">
-        <AddPlantScreen
-          identificationProvider={identificationProvider}
-          policyService={policyService}
-          plantNetConfigured={plantNetConfigured}
-          openAiConfigured={openAiConfigured}
-        />
-      </main>
-    </div>
+    <PlantCareProvider
+      identificationProvider={identificationProvider}
+      policyService={policyService}
+      plantNetConfigured={plantNetAvailable}
+      openAiConfigured={openAiReady}
+    >
+      <div className="app-shell">
+        <main className="app-content">
+          <AddPlantScreen />
+        </main>
+      </div>
+    </PlantCareProvider>
   );
 };
 
 export default App;
-
-
-
-
-
-

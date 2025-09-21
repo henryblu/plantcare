@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: #1f2933;
   background-color: #f7fafc;
@@ -124,7 +124,7 @@ body {
   cursor: pointer;
 }
 
-.candidate-item.active {
+.candidate-item--active {
   border-color: #2d7b5f;
   background-color: rgba(45, 123, 95, 0.08);
 }

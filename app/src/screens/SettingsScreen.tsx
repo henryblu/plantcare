@@ -1,5 +1,10 @@
 import { useState } from "react";
-import type { UiConfig } from "../App";
+
+interface UiConfig {
+  useMocks: boolean;
+  plantNetApiKey: string;
+  openAiApiKey: string;
+}
 
 interface SettingsScreenProps {
   config: UiConfig;
@@ -88,4 +93,3 @@ const SettingsScreen = ({ config, onChange, onClearData }: SettingsScreenProps) 
 };
 
 export default SettingsScreen;
-
