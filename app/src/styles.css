@@ -422,3 +422,99 @@ textarea {
     text-align: center;
   }
 }
+/* Phase 0 Task 4 enhancements */
+.status-banner--progress {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.status-banner--progress > span:last-child {
+  flex: 1;
+}
+
+.status-banner__progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: rgba(255, 255, 255, 0.95);
+  animation: spinner-rotate 0.85s linear infinite;
+}
+
+.status-banner--progress .spinner {
+  border-color: rgba(11, 26, 74, 0.25);
+  border-top-color: rgba(11, 26, 74, 0.9);
+}
+
+.spinner-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.status-banner--progress .spinner-label {
+  color: rgba(11, 26, 74, 0.75);
+}
+
+.error-banner--inline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.error-banner__message {
+  line-height: 1.4;
+}
+
+.error-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tertiary-button {
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  background: transparent;
+  color: #ffffff;
+  font-weight: 600;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.tertiary-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.9);
+}
+
+.tertiary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.summary-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 1.25rem 0 1rem;
+}
+
+.policy-summary__lead {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-text-strong);
+}
+
+@keyframes spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
