@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@core/*": ["core/*"],
+      "@services/*": ["services/*"],
+      "@config/*": ["config/*"],
+      "@app/*": ["app/src/*"]
+    }
+  }
+}

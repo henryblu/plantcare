@@ -1,4 +1,5 @@
 {
+  "extends": "./tsconfig.paths.json",
   "compilerOptions": {
     "target": "ES2020",
     "lib": [
@@ -18,20 +19,6 @@
     "forceConsistentCasingInFileNames": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
-    "paths": {
-      "@core/*": [
-        "core/*"
-      ],
-      "@services/*": [
-        "services/*"
-      ],
-      "@config/*": [
-        "config/*"
-      ],
-      "@app/*": [
-        "app/src/*"
-      ]
-    },
     "noEmit": true
   },
   "include": [

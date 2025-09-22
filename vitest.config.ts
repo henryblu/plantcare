@@ -1,5 +1,7 @@
-import path from 'node:path';
+import { resolveAliasMap } from './config/pathAliases';
 import { defineConfig } from 'vitest/config';
+
+const aliasMap = resolveAliasMap(__dirname);
 
 export default defineConfig({
   test: {
@@ -8,11 +10,6 @@ export default defineConfig({
     exclude: ['node_modules', 'dist'],
   },
   resolve: {
-    alias: {
-      '@core': path.resolve(__dirname, 'core'),
-      '@services': path.resolve(__dirname, 'services'),
-      '@config': path.resolve(__dirname, 'config'),
-      '@app': path.resolve(__dirname, 'app/src'),
-    },
+    alias: aliasMap,
   },
 });

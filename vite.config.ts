@@ -1,8 +1,9 @@
-﻿import type { IncomingMessage } from "node:http";
+import type { IncomingMessage } from "node:http";
 import { defineConfig, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
+import { resolveAliasMap, resolvedAliasPaths } from "./config/pathAliases";
 
 const loadKeyFromEnvFile = (targetKey: string, logScope: string) => {
   if (process.env[targetKey]) {
@@ -287,6 +288,9 @@ const openAiProxyPlugin = (): PluginOption => ({
   },
 });
 
+const aliasMap = resolveAliasMap(__dirname);
+const allowedFsPaths = ["..", ...resolvedAliasPaths(__dirname)];
+
 export default defineConfig({
   root: "app",
   envDir: path.resolve(__dirname),
@@ -296,22 +300,11 @@ export default defineConfig({
     "process.env": {},
   },
   resolve: {
-    alias: {
-      "@core": path.resolve(__dirname, "core"),
-      "@services": path.resolve(__dirname, "services"),
-      "@app": path.resolve(__dirname, "app/src"),
-      "@config": path.resolve(__dirname, "config"),
-    },
+    alias: aliasMap,
   },
   server: {
     fs: {
-      allow: [
-        "..",
-        path.resolve(__dirname, "core"),
-        path.resolve(__dirname, "services"),
-        path.resolve(__dirname, "app/src"),
-        path.resolve(__dirname, "config"),
-      ],
+      allow: allowedFsPaths,
     },
   },
   build: {
