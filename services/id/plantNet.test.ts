@@ -1,4 +1,4 @@
-﻿import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { PlantNetClient, PlantNetError } from "./plantNet";
 
 describe("PlantNetClient", () => {
@@ -17,7 +17,7 @@ describe("PlantNetClient", () => {
           },
         ],
       }),
-    ).rejects.toMatchObject<Partial<PlantNetError>>({ code: "INVALID_IMAGE" });
+    ).rejects.toMatchObject({ code: "INVALID_IMAGE" });
   });
 
   it("retries a transient network failure once before succeeding", async () => {
@@ -65,6 +65,6 @@ describe("PlantNetClient", () => {
           },
         ],
       }),
-    ).rejects.toMatchObject<Partial<PlantNetError>>({ code: "API_ERROR" });
+    ).rejects.toMatchObject({ code: "API_ERROR" });
   });
 });

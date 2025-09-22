@@ -1,4 +1,4 @@
-﻿# TASKS - Smart Plant MVP (Software-only)
+# TASKS - Smart Plant MVP (Software-only)
 
 ## Guiding principles
 
@@ -19,28 +19,28 @@
 
 **Goal:** Same features, but safe and predictable.
 
-* [ ] **Image validation (client-side)**
-  * [ ] Accept types: `image/jpeg`, `image/png`, `image/webp`.
-  * [ ] Max size: 8 MB; show friendly error if exceeded.
-  * [ ] Min dimensions: 512x512; auto-downscale large images to <= 2048 px longest side.
-  * [ ] Normalize EXIF orientation before upload.
+* [x] **Image validation (client-side)**
+  * [x] Accept types: `image/jpeg`, `image/png`, `image/webp`.
+  * [x] Max size: 8 MB; show friendly error if exceeded.
+  * [x] Min dimensions: 512x512; auto-downscale large images to <= 2048 px longest side.
+  * [x] Normalize EXIF orientation before upload.
 
-* [ ] **PlantNet request guardrails**
-  * [ ] Reject if no image or invalid MIME.
-  * [ ] Timeouts (e.g., 15s) with retry x1; clear error UX on failure.
-  * [ ] Structured errors: `NETWORK_ERROR | INVALID_IMAGE | API_ERROR`.
+* [x] **PlantNet request guardrails**
+  * [x] Reject if no image or invalid MIME.
+  * [x] Timeouts (e.g., 15s) with retry x1; clear error UX on failure.
+  * [x] Structured errors: `NETWORK_ERROR | INVALID_IMAGE | API_ERROR`.
 
-* [ ] **ChatGPT request guardrails**
-  * [ ] Never send images; send `{canonicalName, commonName?, type?}` only.
-  * [ ] Enforce strict JSON response; on invalid JSON -> retry once with "JSON only".
-  * [ ] Fallback to seeded default policy by type if still invalid.
+* [x] **ChatGPT request guardrails**
+  * [x] Never send images; send `{canonicalName, commonName?, type?}` only.
+  * [x] Enforce strict JSON response; on invalid JSON -> retry once with "JSON only".
+  * [x] Fallback to seeded default policy by type if still invalid.
 
-* [ ] **UX states**
+* [ ] **UX states** _(in progress)_
   * [ ] Loading spinners (PlantNet / ChatGPT).
   * [ ] Inline errors with "Try again" and "Choose different photo".
   * [ ] Success card shows species + one-line policy.
 
-* [ ] **Housekeeping**
+* [ ] **Housekeeping** _(in progress)_
   * [ ] `.env.sample` with `PLANTNET_API_KEY`, `OPENAI_API_KEY`.
   * [ ] Feature flags: `USE_MOCK_PLANTNET`, `USE_MOCK_CHATGPT`.
   * [ ] Readme: run steps, mock vs real.

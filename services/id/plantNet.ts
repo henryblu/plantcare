@@ -87,7 +87,11 @@ const toBlob = async (
   }
 
   if (image.data instanceof Uint8Array) {
-    return new Blob([image.data], { type });
+    const view =
+      image.data.byteOffset === 0 && image.data.byteLength === image.data.buffer.byteLength
+        ? image.data
+        : image.data.slice();
+    return new Blob([view.buffer as ArrayBuffer], { type });
   }
 
   if (image.uri) {
@@ -362,3 +366,5 @@ export class PlantNetClient {
     throw lastError ?? new PlantNetError("NETWORK_ERROR", "PlantNet request failed.");
   }
 }
+
+

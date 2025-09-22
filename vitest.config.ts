@@ -12,6 +12,7 @@ export default defineConfig({
       '@core': path.resolve(__dirname, 'core'),
       '@services': path.resolve(__dirname, 'services'),
       '@config': path.resolve(__dirname, 'config'),
+      '@app': path.resolve(__dirname, 'app/src'),
     },
   },
 });

@@ -1,45 +1,21 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import type { SpeciesProfile, SpeciesType } from "@core/models/speciesProfile";
+import type { SpeciesProfile } from "@core/models/speciesProfile";
 import type { IdentificationCandidate } from "@services/id/types";
-import type { PolicyGenerationRequest } from "@services/policy/chatgpt";
 import { ImageValidationError, prepareImageFile } from "@app/utils/imageProcessing";
 import { PlantNetError } from "@services/id/plantNet";
 import { usePlantCareServices } from "../providers/PlantCareProvider";
-
-const SPECIES_TYPE_OPTIONS: SpeciesType[] = [
-  "succulent",
-  "semi-succulent",
-  "tropical",
-  "fern",
-  "other",
-];
-
-const ensureType = (candidate: IdentificationCandidate): SpeciesType => {
-  const candidateType = candidate.type?.toLowerCase();
-  if (candidateType && SPECIES_TYPE_OPTIONS.includes(candidateType as SpeciesType)) {
-    return candidateType as SpeciesType;
-  }
-  return "other";
-};
-
-const buildPolicyRequest = (candidate: IdentificationCandidate): PolicyGenerationRequest => ({
-  speciesKey: candidate.speciesKey,
-  canonicalName: candidate.canonicalName,
-  commonName: candidate.commonName,
-  confidence: candidate.score,
-  type: ensureType(candidate),
-});
-
-const formatPercentage = (value: number | undefined): string => {
-  if (typeof value !== "number" || Number.isNaN(value)) return "N/A";
-  return `${(value * 100).toFixed(1)}%`;
-};
-
-interface ManualEntryDraft {
-  canonicalName: string;
-  commonName: string;
-  type: SpeciesType;
-}
+import ManualEntryForm, { ManualEntryDraft } from "@app/features/addPlant/components/ManualEntryForm";
+import CandidateList from "@app/features/addPlant/components/CandidateList";
+import PolicySummary from "@app/features/addPlant/components/PolicySummary";
+import {
+  buildPolicyRequest,
+  getCacheHitStatus,
+  getIdentifyingStatus,
+  getImageProcessingStatus,
+  getImageReadyStatus,
+  getPolicyGenerationStatus,
+  getPolicyReadyStatus,
+} from "@app/features/addPlant/utils";
 
 interface ProcessedImageMeta {
   width: number;
@@ -48,179 +24,6 @@ interface ProcessedImageMeta {
   originalHeight: number;
   wasDownscaled: boolean;
 }
-
-
-interface ManualEntryFormProps {
-  draft: ManualEntryDraft;
-  onChange: (next: ManualEntryDraft) => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  disabled: boolean;
-}
-
-const ManualEntryForm = ({ draft, onChange, onSubmit, disabled }: ManualEntryFormProps) => {
-  const handleDraftChange = (key: keyof ManualEntryDraft) => (
-    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    onChange({
-      ...draft,
-      [key]: key === "type" ? (event.target.value as SpeciesType) : event.target.value,
-    });
-  };
-
-  const isSubmitDisabled = disabled || draft.canonicalName.trim().length === 0;
-
-  return (
-    <form className="card card--form" onSubmit={onSubmit}>
-      <div>
-        <h4>Manual species entry</h4>
-        <p className="muted-text">
-          Provide a canonical species name when PlantNet is unavailable or returns poor matches.
-        </p>
-      </div>
-      <div className="form-grid split">
-        <label>
-          Canonical name
-          <input
-            type="text"
-            value={draft.canonicalName}
-            onChange={handleDraftChange("canonicalName")}
-            placeholder="e.g. Dracaena trifasciata"
-            disabled={disabled}
-            required
-          />
-        </label>
-        <label>
-          Common name (optional)
-          <input
-            type="text"
-            value={draft.commonName}
-            onChange={handleDraftChange("commonName")}
-            placeholder="Snake plant"
-            disabled={disabled}
-          />
-        </label>
-        <label>
-          Species type
-          <select value={draft.type} onChange={handleDraftChange("type")} disabled={disabled}>
-            {SPECIES_TYPE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-      <div className="button-row">
-        <button className="secondary-button" type="submit" disabled={isSubmitDisabled}>
-          Generate care guide
-        </button>
-      </div>
-    </form>
-  );
-};
-
-interface CandidateListProps {
-  candidates: IdentificationCandidate[];
-  selectedKey: string | null;
-  onSelect: (speciesKey: string) => void;
-  disabled: boolean;
-}
-
-const CandidateList = ({ candidates, selectedKey, onSelect, disabled }: CandidateListProps) => {
-  if (!candidates.length) return null;
-
-  return (
-    <section className="card card--list">
-      <div className="summary-header">
-        <h4>Species candidates</h4>
-        <p className="muted-text">Pick the closest match to refine the generated care guide.</p>
-      </div>
-      <div className="candidate-list">
-        {candidates.map((candidate) => {
-          const key = candidate.speciesKey;
-          const isSelected = key === selectedKey;
-          const className = `candidate-item${isSelected ? " candidate-item--active" : ""}`;
-          return (
-            <label key={key} className={className}>
-              <div className="candidate-header">
-                <input
-                  type="radio"
-                  name="speciesCandidate"
-                  value={key}
-                  checked={isSelected}
-                  onChange={() => onSelect(key)}
-                  disabled={disabled}
-                />
-                <div>
-                  <strong>{candidate.canonicalName}</strong>
-                  {candidate.commonName && <div className="candidate-subtitle">{candidate.commonName}</div>}
-                </div>
-              </div>
-              <div className="candidate-meta">
-                <span>Confidence: {formatPercentage(candidate.score)}</span>
-                {candidate.source && <span>Source: {candidate.source}</span>}
-              </div>
-            </label>
-          );
-        })}
-      </div>
-    </section>
-  );
-};
-
-interface PolicySummaryProps {
-  candidate: IdentificationCandidate;
-  profile: SpeciesProfile;
-}
-
-const PolicySummary = ({ candidate, profile }: PolicySummaryProps) => (
-  <section className="card card--summary">
-    <div className="summary-header">
-      <h3>{candidate.canonicalName}</h3>
-      {candidate.commonName && <span className="muted-text">Also known as {candidate.commonName}</span>}
-    </div>
-
-    <div className="badge-row">
-      <span className="chip chip--outline">Confidence {formatPercentage(candidate.score)}</span>
-      {candidate.source && <span className="chip chip--outline">Source {candidate.source}</span>}
-      <span className="chip chip--outline">Species {candidate.speciesKey}</span>
-    </div>
-
-    <dl className="policy-grid">
-      <div>
-        <dt>Watering cadence</dt>
-        <dd>
-          Water every <strong>{profile.moisturePolicy.waterIntervalDays}</strong> days
-        </dd>
-      </div>
-      <div>
-        <dt>Moisture threshold</dt>
-        <dd>
-          Keep soil at <strong>{profile.moisturePolicy.soilMoistureThreshold}%</strong>
-        </dd>
-      </div>
-      <div>
-        <dt>Humidity preference</dt>
-        <dd>{profile.moisturePolicy.humidityPreference}</dd>
-      </div>
-      <div>
-        <dt>Light requirement</dt>
-        <dd>{profile.moisturePolicy.lightRequirement}</dd>
-      </div>
-    </dl>
-
-    {profile.moisturePolicy.notes.length > 0 && (
-      <div className="notes-section">
-        <strong>Care notes</strong>
-        <ul className="notes-list">
-          {profile.moisturePolicy.notes.map((note, index) => (
-            <li key={index}>{note}</li>
-          ))}
-        </ul>
-      </div>
-    )}
-  </section>
-);
 
 const AddPlantScreen = () => {
   const {
@@ -298,7 +101,7 @@ const AddPlantScreen = () => {
       return;
     }
 
-    setStatus("Processing image...");
+    setStatus(getImageProcessingStatus());
 
     try {
       const prepared = await prepareImageFile(selected);
@@ -307,18 +110,15 @@ const AddPlantScreen = () => {
       }
 
       setFile(prepared.file);
-      setImageMeta({
+      const meta: ProcessedImageMeta = {
         width: prepared.width,
         height: prepared.height,
         originalWidth: prepared.originalWidth,
         originalHeight: prepared.originalHeight,
         wasDownscaled: prepared.wasDownscaled,
-      });
-      setStatus(
-        prepared.wasDownscaled
-          ? `Image optimized to ${prepared.width}x${prepared.height}px (down from ${prepared.originalWidth}x${prepared.originalHeight}px).`
-          : `Image ready (${prepared.width}x${prepared.height}px).`,
-      );
+      };
+      setImageMeta(meta);
+      setStatus(getImageReadyStatus(meta));
       setError(null);
       if (plantNetConfigured) {
         setManualMode(false);
@@ -348,13 +148,13 @@ const AddPlantScreen = () => {
     const existingProfile = profiles[candidate.speciesKey];
     if (existingProfile && !options?.forceRefresh) {
       setSelectedKey(candidate.speciesKey);
-      setStatus("Loaded cached care guide.");
+      setStatus(getCacheHitStatus());
       return;
     }
 
     const runToken = startRun();
     try {
-      setStatus(options?.forceRefresh ? "Refreshing care guide..." : "Generating care guide...");
+      setStatus(getPolicyGenerationStatus(options?.forceRefresh));
       setError(null);
       const profile = await resolvePolicy(buildPolicyRequest(candidate), options);
       if (latestRunRef.current !== runToken) {
@@ -365,7 +165,7 @@ const AddPlantScreen = () => {
         [candidate.speciesKey]: profile,
       }));
       setSelectedKey(candidate.speciesKey);
-      setStatus("All set! Review the care guide below.");
+      setStatus(getPolicyReadyStatus());
     } catch (err) {
       if (latestRunRef.current === runToken) {
         setStatus(null);
@@ -388,7 +188,7 @@ const AddPlantScreen = () => {
     }
 
     resetResults();
-    setStatus("Identifying species...");
+    setStatus(getIdentifyingStatus());
     setError(null);
 
     const runToken = startRun();
