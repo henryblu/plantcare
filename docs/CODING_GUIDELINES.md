@@ -13,7 +13,7 @@
 
 ## 3. Configuration & Feature Flags
 - Centralize environment variables in `config/constants.ts`; mirror updates in `.env.sample` and document them in the README.
-- Use existing flags (`FEATURE_PLANTNET`, `FEATURE_CHATGPT`, `USE_MOCKS`) instead of adding bespoke toggles; default demos to mock mode.
+- Use existing flags (`FEATURE_PLANTNET`, `FEATURE_CHATGPT`, `USE_MOCK_PLANTNET`, `USE_MOCK_CHATGPT`) instead of adding bespoke toggles; default demos to mock mode.
 - Guard all new feature flags with documentation on expected behaviors in mock vs. live modes.
 
 ## 4. Data Contracts & Validation

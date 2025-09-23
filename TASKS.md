@@ -35,15 +35,15 @@
   * [x] Enforce strict JSON response; on invalid JSON -> retry once with "JSON only".
   * [x] Fallback to seeded default policy by type if still invalid.
 
-* [ ] **UX states** _(in progress)_
-  * [ ] Loading spinners (PlantNet / ChatGPT).
-  * [ ] Inline errors with "Try again" and "Choose different photo".
-  * [ ] Success card shows species + one-line policy.
+* [x] **UX states**
+  * [x] Loading spinners (PlantNet / ChatGPT).
+  * [x] Inline errors with "Try again" and "Choose different photo".
+  * [x] Success card shows species + one-line policy.
 
-* [ ] **Housekeeping** _(in progress)_
-  * [ ] `.env.sample` with `PLANTNET_API_KEY`, `OPENAI_API_KEY`.
-  * [ ] Feature flags: `USE_MOCK_PLANTNET`, `USE_MOCK_CHATGPT`.
-  * [ ] Readme: run steps, mock vs real.
+* [x] **Housekeeping**
+  * [x] `.env.sample` with `PLANTNET_API_KEY`, `OPENAI_API_KEY`.
+  * [x] Feature flags: `USE_MOCK_PLANTNET`, `USE_MOCK_CHATGPT`.
+  * [x] Readme: run steps, mock vs real.
 
 **DoD:** Wrong file types/sizes are blocked; failures do not crash; happy path still works.
 
@@ -190,7 +190,7 @@
 
 ## Quick checklist (for daily stand-ups)
 
-* [ ] 0 Stabilize web flow (validation, errors)
+* [x] 0 Stabilize web flow (validation, errors)
 * [ ] 1 Confidence heuristic + multi-photo loop
 * [ ] 2 Local cache + schema enforcement
 * [ ] 3 Tabs + tidy UI
@@ -200,3 +200,5 @@
 * [ ] 7 (Deferred) Accounts concept
 
 ---
+
+

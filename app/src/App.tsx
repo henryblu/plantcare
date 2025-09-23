@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { getRuntimeServicesConfig } from "@config/environment";
+import { USE_MOCK_PLANTNET, USE_MOCK_CHATGPT } from "@config/featureFlags";
 import {
   createIdentificationProvider,
   type IdentificationProvider,
@@ -11,7 +12,7 @@ import {
 import {
   createChatGptPolicyService,
   getDefaultPolicySeeds,
-  ChatGptPolicyService,
+  type ChatGptPolicyService,
 } from "@services/policy/chatgpt";
 import { PlantCareProvider } from "./providers/PlantCareProvider";
 import AddPlantScreen from "./screens/AddPlantScreen";
@@ -26,6 +27,8 @@ const bindFetch = (): typeof fetch => {
 const App = () => {
   const runtimeConfig = useMemo(getRuntimeServicesConfig, []);
   const fetchFn = useMemo(bindFetch, []);
+  const useMockPlantNet = USE_MOCK_PLANTNET;
+  const useMockChatGpt = USE_MOCK_CHATGPT;
 
   const {
     plantNet: { configured: plantNetConfigured, endpoint: plantNetEndpoint },
@@ -37,7 +40,16 @@ const App = () => {
   } = runtimeConfig;
 
   const identificationProvider = useMemo<IdentificationProvider | null>(() => {
-    if (!plantNetConfigured) return null;
+    if (useMockPlantNet) {
+      return createIdentificationProvider({
+        useMocks: true,
+      });
+    }
+
+    if (!plantNetConfigured) {
+      return null;
+    }
+
     try {
       const options: PlantNetClientOptions = {
         fetchFn,
@@ -54,24 +66,24 @@ const App = () => {
       console.error("[App] Failed to initialise PlantNet client", error);
       return null;
     }
-  }, [plantNetConfigured, plantNetEndpoint, fetchFn]);
+  }, [useMockPlantNet, plantNetConfigured, plantNetEndpoint, fetchFn]);
 
   const policyService = useMemo<ChatGptPolicyService | null>(() => {
     try {
       return createChatGptPolicyService({
-        apiKey: openAiApiKey,
+        apiKey: useMockChatGpt ? undefined : openAiApiKey,
         endpoint: openAiEndpoint,
         seedPolicies: getDefaultPolicySeeds(),
-        fetchFn,
+        fetchFn: useMockChatGpt ? undefined : fetchFn,
       });
     } catch (error) {
       console.error("[App] Failed to initialise ChatGPT policy service", error);
       return null;
     }
-  }, [openAiApiKey, openAiEndpoint, fetchFn, openAiBaseConfigured]);
+  }, [useMockChatGpt, openAiApiKey, openAiEndpoint, fetchFn]);
 
-  const plantNetAvailable = plantNetConfigured && Boolean(identificationProvider);
-  const openAiReady = openAiBaseConfigured && Boolean(policyService);
+  const plantNetAvailable = (useMockPlantNet || plantNetConfigured) && Boolean(identificationProvider);
+  const openAiReady = !useMockChatGpt && openAiBaseConfigured && Boolean(policyService);
 
   return (
     <PlantCareProvider

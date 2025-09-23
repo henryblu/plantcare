@@ -1,7 +1,8 @@
 import { useState } from "react";
 
 interface UiConfig {
-  useMocks: boolean;
+  useMockPlantNet: boolean;
+  useMockChatGpt: boolean;
   plantNetApiKey: string;
   openAiApiKey: string;
 }
@@ -31,19 +32,36 @@ const SettingsScreen = ({ config, onChange, onClearData }: SettingsScreenProps) 
       <h3>Settings</h3>
       <div className="form-grid">
         <label>
-          Use mock services
+          Mock PlantNet identification
           <select
             className="select-input"
-            value={draft.useMocks ? "true" : "false"}
+            value={draft.useMockPlantNet ? "true" : "false"}
             onChange={(event) =>
               setDraft((prev: UiConfig) => ({
                 ...prev,
-                useMocks: event.target.value === "true",
+                useMockPlantNet: event.target.value === "true",
               }))
             }
           >
-            <option value="true">Yes (offline demo)</option>
-            <option value="false">No (call live services)</option>
+            <option value="true">Yes (use canned candidates)</option>
+            <option value="false">No (call PlantNet)</option>
+          </select>
+        </label>
+
+        <label>
+          Mock ChatGPT policies
+          <select
+            className="select-input"
+            value={draft.useMockChatGpt ? "true" : "false"}
+            onChange={(event) =>
+              setDraft((prev: UiConfig) => ({
+                ...prev,
+                useMockChatGpt: event.target.value === "true",
+              }))
+            }
+          >
+            <option value="true">Yes (use seeded defaults)</option>
+            <option value="false">No (call ChatGPT)</option>
           </select>
         </label>
 
