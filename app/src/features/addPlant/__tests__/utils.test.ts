@@ -1,14 +1,19 @@
 import { describe, expect, it } from "vitest";
 import type { IdentificationCandidate } from "@services/id/types";
 import {
+  ADDITIONAL_PHOTO_GUIDANCE,
+  assessConfidence,
   buildPolicyRequest,
+  ConfidenceAssessment,
   formatPercentage,
   getCacheHitStatus,
   getIdentifyingStatus,
   getImageProcessingStatus,
   getImageReadyStatus,
+  getLowConfidenceStatus,
   getPolicyGenerationStatus,
   getPolicyReadyStatus,
+  getReidentifyStatus,
   ImageStatusInput,
 } from "@app/features/addPlant/utils";
 
@@ -97,5 +102,52 @@ describe("formatPercentage", () => {
   it("guards against invalid values", () => {
     expect(formatPercentage(undefined)).toBe("N/A");
     expect(formatPercentage(Number.NaN)).toBe("N/A");
+  });
+});
+
+describe("confidence assessment", () => {
+  const sampleCandidates: IdentificationCandidate[] = [
+    { speciesKey: "plant-a", canonicalName: "Plant A", score: 0.62, source: "plantnet" },
+    { speciesKey: "plant-b", canonicalName: "Plant B", score: 0.31, source: "plantnet" },
+  ];
+
+  it("classifies confident matches as medium when thresholds are met", () => {
+    const result = assessConfidence(sampleCandidates);
+    expect(result.level).toBe("medium");
+  });
+
+  it("promotes very strong matches to high confidence", () => {
+    const result = assessConfidence([
+      { speciesKey: "plant-a", canonicalName: "Plant A", score: 0.88, source: "plantnet" },
+    ]);
+    expect(result.level).toBe("high");
+  });
+
+  it("falls back to low confidence when thresholds are not met", () => {
+    const result = assessConfidence([
+      { speciesKey: "weak", canonicalName: "Weak", score: 0.42, source: "plantnet" },
+      { speciesKey: "weaker", canonicalName: "Weaker", score: 0.4, source: "plantnet" },
+    ]);
+    expect(result.level).toBe("low");
+  });
+
+  it("provides guidance strings for retries", () => {
+    const assessment: ConfidenceAssessment = {
+      topScore: 0.42,
+      secondScore: 0.33,
+      difference: 0.09,
+      level: "low",
+    };
+    expect(getLowConfidenceStatus(assessment)).toContain("Low confidence");
+    expect(getLowConfidenceStatus(assessment, { reachedLimit: true })).toContain("Confidence stayed low");
+  });
+
+  it("suggests retry copy based on photo count", () => {
+    expect(getReidentifyStatus(1)).toBe("Re-running identification...");
+    expect(getReidentifyStatus(3)).toBe("Re-running identification with 3 photos...");
+  });
+
+  it("exposes additional photo guidance copy", () => {
+    expect(ADDITIONAL_PHOTO_GUIDANCE).toHaveLength(2);
   });
 });

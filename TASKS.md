@@ -53,19 +53,19 @@
 
 **Goal:** Ask for more photos when ID is uncertain.
 
-* [ ] **Heuristic**
-  * [ ] Compute `top1.score` and `top2.score`.
-  * [ ] Confidence OK if `top1.score >= 0.55` OR `(top1 - top2) >= 0.25`.
-  * [ ] Otherwise -> "Low confidence" flow.
+* [x] **Heuristic**
+  * [x] Compute `top1.score` and `top2.score`.
+  * [x] Confidence OK if `top1.score >= 0.55` OR `(top1 - top2) >= 0.25`.
+  * [x] Otherwise -> "Low confidence" flow.
 
-* [ ] **Low-confidence flow**
-  * [ ] Prompt user to retake/add up to 2 more photos (leaf close-up, whole plant).
-  * [ ] Re-query PlantNet with combined evidence (if supported) or best of the new shots.
-  * [ ] If still low: offer manual species entry + type picker, with clear disclaimer.
+* [x] **Low-confidence flow**
+  * [x] Prompt user to retake/add up to 2 more photos (leaf close-up, whole plant).
+  * [x] Re-query PlantNet with combined evidence (if supported) or best of the new shots.
+  * [x] If still low: offer manual species entry + type picker, with clear disclaimer.
 
-* [ ] **UI**
-  * [ ] Confidence meter: `High / Medium / Low` (text + small badge).
-  * [ ] Microcopy with guidance ("Try better lighting; include leaves and stem").
+* [x] **UI**
+  * [x] Confidence meter: `High / Medium / Low` (text + small badge).
+  * [x] Microcopy with guidance ("Try better lighting; include leaves and stem").
 
 **DoD:** Bad photos lead to helpful prompts; confident IDs move forward without friction.
 
@@ -191,7 +191,7 @@
 ## Quick checklist (for daily stand-ups)
 
 * [x] 0 Stabilize web flow (validation, errors)
-* [ ] 1 Confidence heuristic + multi-photo loop
+* [x] 1 Confidence heuristic + multi-photo loop
 * [ ] 2 Local cache + schema enforcement
 * [ ] 3 Tabs + tidy UI
 * [ ] 4 Service boundaries (portable)
