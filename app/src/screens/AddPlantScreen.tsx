@@ -2,6 +2,7 @@ import ManualEntryForm from "@app/features/addPlant/components/ManualEntryForm";
 import CandidateList from "@app/features/addPlant/components/CandidateList";
 import PolicySummary from "@app/features/addPlant/components/PolicySummary";
 import { useAddPlantFlow } from "@app/features/addPlant/hooks/useAddPlantFlow";
+import { formatPercentage } from "@app/features/addPlant/utils";
 import { usePlantCareServices } from "../providers/PlantCareProvider";
 
 const AddPlantScreen = () => {
@@ -47,6 +48,18 @@ const AddPlantScreen = () => {
     manualCandidate,
     plantNetConfigured,
   });
+
+  const confidenceChipTone = confidence
+    ? confidence.level === "high"
+      ? "chip--success"
+      : confidence.level === "medium"
+        ? "chip--info"
+        : "chip--warning"
+    : "chip--info";
+
+  const confidenceLabel = confidence
+    ? `${confidence.level.charAt(0).toUpperCase()}${confidence.level.slice(1)}`
+    : null;
 
   return (
     <div className="content-stack">
@@ -137,6 +150,15 @@ const AddPlantScreen = () => {
               </div>
             )}
             <span>{status.message}</span>
+          </div>
+        )}
+
+        {confidence && (
+          <div className="confidence-meter">
+            <span className={`chip ${confidenceChipTone}`}>Confidence: {confidenceLabel}</span>
+            <span className="muted-text">
+              Top match {formatPercentage(confidence.topScore)} · Gap {formatPercentage(confidence.difference)}
+            </span>
           </div>
         )}
 

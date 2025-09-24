@@ -13,7 +13,9 @@ const candidate: IdentificationCandidate = {
   speciesKey: "ficus-elastica",
   canonicalName: "Ficus elastica",
   commonName: "Rubber plant",
+  score: 0.84,
   type: "tropical",
+  source: "mock",
 };
 
 const profile: SpeciesProfile = {
@@ -21,12 +23,16 @@ const profile: SpeciesProfile = {
   canonicalName: "Ficus elastica",
   commonName: "Rubber plant",
   type: "tropical",
-  watering: "Weekly",
-  lighting: "Bright indirect",
-  humidity: "Medium",
-  temperature: "65-80F",
-  soil: "Well-draining",
-  fertilizer: "Monthly",
+  confidence: 0.84,
+  moisturePolicy: {
+    waterIntervalDays: 7,
+    soilMoistureThreshold: 30,
+    humidityPreference: "medium",
+    lightRequirement: "bright-indirect",
+    notes: ["Let the top inch of soil dry before watering."],
+  },
+  source: "chatgpt",
+  updatedAt: "2024-01-01T00:00:00.000Z",
 };
 
 describe("usePolicyResolution", () => {

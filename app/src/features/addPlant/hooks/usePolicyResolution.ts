@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 
 import { buildPolicyRequest, getCacheHitStatus, getPolicyGenerationStatus, getPolicyReadyStatus } from "@app/features/addPlant/utils";
 import type { IdentificationCandidate } from "@services/id/types";
+import type { PolicyGenerationRequest } from "@services/policy/chatgpt";
 import type { SpeciesProfile } from "@core/models/speciesProfile";
 import type { ResolvePolicyOptions } from "@core/orchestration/cacheFlow";
 

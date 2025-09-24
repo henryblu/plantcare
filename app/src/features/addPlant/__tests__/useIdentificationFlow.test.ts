@@ -27,6 +27,7 @@ const highConfidenceCandidates: IdentificationCandidate[] = [
     commonName: "Swiss cheese plant",
     score: 0.92,
     type: "tropical",
+    source: "mock",
   },
   {
     speciesKey: "monstera-adansonii",
@@ -34,6 +35,7 @@ const highConfidenceCandidates: IdentificationCandidate[] = [
     commonName: "Adanson's monstera",
     score: 0.35,
     type: "tropical",
+    source: "mock",
   },
 ];
 
@@ -44,6 +46,7 @@ const lowConfidenceCandidates: IdentificationCandidate[] = [
     commonName: "Chinese money plant",
     score: 0.2,
     type: "tropical",
+    source: "mock",
   },
   {
     speciesKey: "pilea-cadierei",
@@ -51,6 +54,7 @@ const lowConfidenceCandidates: IdentificationCandidate[] = [
     commonName: "Aluminum plant",
     score: 0.18,
     type: "tropical",
+    source: "mock",
   },
 ];
 
@@ -226,6 +230,7 @@ describe("useIdentificationFlow", () => {
       commonName: "Fiddle-leaf fig",
       score: 1,
       type: "tropical",
+      source: "manual",
     };
 
     const { result } = renderHook(() =>
