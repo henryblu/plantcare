@@ -30,8 +30,11 @@ import type {
   ChatGptPolicyService,
   PolicyGenerationRequest,
 } from "@services/policy/chatgpt";
-import { createBrowserStorage } from "@services/storage/browserAdapter";
 import { createMemoryStorage } from "@services/storage/memoryAdapter";
+import {
+  createAsyncStorageAdapter,
+  type AsyncStorageLike,
+} from "@services/storage/persistentAdapter";
 
 export interface PlantCareContextValue {
   store: PlantStore;
@@ -64,19 +67,70 @@ export interface PlantCareProviderProps {
   openAiConfigured: boolean;
 }
 
-const createStorageAdapter = () => {
-  if (typeof window === "undefined") {
-    return createMemoryStorage();
+const adaptAsyncStorage = (candidate: unknown): AsyncStorageLike | null => {
+  if (!candidate || typeof candidate !== "object") return null;
+  const storage = candidate as Record<string, unknown>;
+  const getItem = storage.getItem;
+  const setItem = storage.setItem;
+  const removeItem = storage.removeItem;
+  if (
+    typeof getItem !== "function" ||
+    typeof setItem !== "function" ||
+    typeof removeItem !== "function"
+  ) {
+    return null;
+  }
+  return {
+    async getItem(key: string) {
+      return Promise.resolve(getItem.call(candidate, key));
+    },
+    async setItem(key: string, value: string) {
+      await Promise.resolve(setItem.call(candidate, key, value));
+    },
+    async removeItem(key: string) {
+      await Promise.resolve(removeItem.call(candidate, key));
+    },
+  };
+};
+
+const createLocalStorageBridge = (): AsyncStorageLike | null => {
+  if (typeof window === "undefined" || typeof window.localStorage === "undefined") {
+    return null;
   }
 
-  try {
-    if (typeof window.localStorage !== "undefined") {
-      return createBrowserStorage();
+  const storage = window.localStorage;
+  return {
+    async getItem(key: string) {
+      return storage.getItem(key);
+    },
+    async setItem(key: string, value: string) {
+      storage.setItem(key, value);
+    },
+    async removeItem(key: string) {
+      storage.removeItem(key);
+    },
+  };
+};
+
+const detectAsyncStorage = (): AsyncStorageLike | null => {
+  const globalScope = globalThis as Record<string, unknown>;
+  const candidates = [globalScope.__PLANTCARE_ASYNC_STORAGE__, globalScope.AsyncStorage];
+
+  for (const candidate of candidates) {
+    const adapted = adaptAsyncStorage(candidate);
+    if (adapted) {
+      return adapted;
     }
-  } catch (error) {
-    console.warn("[PlantCareProvider] Falling back to memory storage", error);
   }
 
+  return createLocalStorageBridge();
+};
+
+const createStorageAdapter = () => {
+  const asyncStorage = detectAsyncStorage();
+  if (asyncStorage) {
+    return createAsyncStorageAdapter(asyncStorage);
+  }
   return createMemoryStorage();
 };
 

@@ -4,6 +4,7 @@ import type { SpeciesProfile } from '../models/speciesProfile';
 import { PlantStore } from '../state/store';
 
 const DEFAULT_TTL_MS = 180 * 24 * 60 * 60 * 1000; // 180 days
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 const isFresh = (profile: SpeciesProfile, ttlMs: number, referenceMs: number): boolean => {
   const updated = Date.parse(profile.updatedAt);
@@ -55,7 +56,13 @@ export class SpeciesCacheFlow {
       speciesKey,
     });
 
-    await this.store.upsertSpeciesProfile(profile);
+    const refreshedAt = new Date(now).toISOString();
+    const ttlDays = Math.max(1, Math.ceil(this.ttlMs / MS_PER_DAY));
+    await this.store.upsertSpeciesProfile(profile, {
+      ttlDays,
+      refreshedAt,
+      source: profile.source,
+    });
     return profile;
   }
 }
