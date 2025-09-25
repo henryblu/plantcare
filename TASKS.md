@@ -75,18 +75,18 @@
 
 **Goal:** Avoid repeated API calls; keep data consistent.
 
-* [ ] **Species cache**
-  * [ ] Key: `taxonId` if present; else normalized `canonicalName` (lowercase).
-  * [ ] Value: `SpeciesProfile` (includes `policy`, `source`, `ts`, `ttlDays`).
-  * [ ] TTL default: 180 days; refresh on `forceRefresh`.
+* [x] **Species cache**
+  * [x] Key: `taxonId` if present; else normalized `canonicalName` (lowercase).
+  * [x] Value: `SpeciesProfile` (includes `policy`, `source`, `ts`, `ttlDays`).
+  * [x] TTL default: 180 days; refresh on `forceRefresh`.
 
-* [ ] **Plant object store**
-  * [ ] Save: `photoUri`, `species {canonical, common, taxonId}`, `type`, `policy`, `createdAt`.
-  * [ ] Storage: local (web: IndexedDB/localForage; later RN: AsyncStorage).
+* [x] **Plant object store**
+  * [x] Save: `photoUri`, `species {canonical, common, taxonId}`, `type`, `policy`, `createdAt`.
+  * [x] Storage: local (web: IndexedDB/localForage; later RN: AsyncStorage).
 
-* [ ] **Schema enforcement**
-  * [ ] Validate ChatGPT JSON against `MoisturePolicy` + `SpeciesProfile` schemas.
-  * [ ] Clamp to sane bounds (e.g., moisture 0-60%, hysteresis 0-10, notes <= 2).
+* [x] **Schema enforcement**
+  * [x] Validate ChatGPT JSON against `MoisturePolicy` + `SpeciesProfile` schemas.
+  * [x] Clamp to sane bounds (e.g., moisture 0-60%, hysteresis 0-10, notes <= 2).
 
 **DoD:** Re-adding the same species does not hit ChatGPT; invalid payloads never persist.
 
@@ -192,7 +192,7 @@
 
 * [x] 0 Stabilize web flow (validation, errors)
 * [x] 1 Confidence heuristic + multi-photo loop
-* [ ] 2 Local cache + schema enforcement
+* [x] 2 Local cache + schema enforcement
 * [ ] 3 Tabs + tidy UI
 * [ ] 4 Service boundaries (portable)
 * [ ] 5 Safe demo mode (rate limits, keys)
@@ -200,5 +200,4 @@
 * [ ] 7 (Deferred) Accounts concept
 
 ---
-
 

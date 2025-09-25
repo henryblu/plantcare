@@ -11,3 +11,9 @@
 - **Live services** (`USE_MOCK_PLANTNET=false`, `USE_MOCK_CHATGPT=false`): Requires `PLANTNET_API_KEY` plus either `OPENAI_API_KEY` or a proxy configuration. Remote calls go to PlantNet and ChatGPT.
 
 Feature toggles are managed via environment variables surfaced in `config/featureFlags.ts`.
+
+## Storage backends
+
+The storage adapter now supports SQLite and AsyncStorage backends with versioned
+schema envelopes. See [`docs/storage-backends.md`](docs/storage-backends.md) for
+details on choosing a backend and how migrations are handled.

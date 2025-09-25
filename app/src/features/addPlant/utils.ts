@@ -27,7 +27,7 @@ export interface ConfidenceAssessment {
   level: ConfidenceLevel;
 }
 
-const HIGH_SCORE_THRESHOLD = 0.60;
+const HIGH_SCORE_THRESHOLD = 0.75;
 const HIGH_DIFF_THRESHOLD = 0.45;
 const OK_SCORE_THRESHOLD = 0.50;
 const OK_DIFF_THRESHOLD = 0.30;
