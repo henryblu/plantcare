@@ -92,23 +92,261 @@
 
 ---
 
-## Phase 3 - Minimal navigation (tabs) + tidy UI
+## Phase 3 — Navigation, IA, and Tidy UI (from PoC → App)
 
-**Goal:** Keep it simple but organized.
+**Goals (what changes for the user)**
 
-* [ ] **Tabs**
-  * [ ] **Home**: list of saved plants; "Add plant" CTA.
-  * [ ] **Settings**: mock/real toggles, clear cache/data, about/version.
+* Two-tab app: Home and Settings, plus the Add Plant flow.
+* Clear, consistent navigation and states; no dead-ends.
+* Saved plants visible and readable at-a-glance; adding a plant is guided and safe.
+* Local-only; all guardrails from Phases 0/1 remain intact.
 
-* [ ] **Home**
-  * [ ] Plant card: photo, species/common, one-line policy (e.g., "Mostly dry 2-3 days; water when <12%").
-  * [ ] Empty state: illustration + "Add your first plant".
+### Epic A — Information Architecture & Navigation
 
-* [ ] **Add Plant**
-  * [ ] Stepper: Photo -> Candidates -> Confirm (optional nickname, type if manual).
-  * [ ] Show confidence badge; route to Phase 1 low-confidence flow if needed.
+#### A.1 Routes & Tabs
 
-**DoD:** Two clean tabs; core add/display flows unaffected.
+**User story:** As a user, I can move between Home and Settings, and start Add Plant from anywhere.
+
+**Tasks**
+
+* Introduce a lightweight router (e.g., file-based or a minimal wrapper) with three routes:
+  * `/` → Home
+  * `/add` → Add Plant (stepper)
+  * `/settings` → Settings
+* Implement a top/bottom TabBar (sticky) with icons + labels: Home, Settings. The Add Plant entry point is a prominent CTA on Home (and optional floating button).
+* Preserve deep-linkable step state on `/add` via `?step=photo|candidates|confirm`.
+
+**Definition of Done**
+
+* Keyboard/tab focus order is logical.
+* URL reflects current screen (including step changes).
+* Navigating back/forward preserves state appropriately.
+
+#### A.2 Empty/Loading/Error States
+
+**User story:** As a user, I always see a helpful state—never a blank screen.
+
+**Tasks**
+
+* Home empty state: simple illustration + “Add your first plant” CTA.
+* Skeletons: plant list/tiles while loading.
+* Inline errors: non-blocking banners with retry for load failures.
+
+**Definition of Done**
+
+* Each screen renders a defined state for: empty, loading, error, content.
+
+### Epic B — Home (Saved Plants)
+
+#### B.1 Plant List & Cards
+
+**User story:** I can scan my plants and see the key care gist.
+
+**Tasks**
+
+* Data source: use the local store (SQLite layer) read.
+* PlantCard component shows: photo (or placeholder), canonical/common name, one-line moisture policy summary (e.g., “Mostly dry 2–3 days; water <12%”), and last updated.
+* Actions menu (kebab):
+  * View details (future)
+  * Rename/nickname (optional; simple inline edit)
+  * Delete (with confirm modal)
+* Basic sort: by `createdAt` desc (default).
+
+**Definition of Done**
+
+* List renders with 10+ items without layout jank.
+* Policy strings correctly derived from schema-clamped data.
+* Delete is optimistic + undo (toast) or confirmed via modal.
+
+#### B.2 Performance & Accessibility
+
+**Tasks**
+
+* Virtualize the list if >50 items (conditional).
+* Alt text rules; cards reachable/operable by keyboard; visible focus ring.
+
+**Definition of Done**
+
+* Lighthouse a11y score ≥ 95 for Home on desktop + mobile widths.
+
+### Epic C — Add Plant (Stepper)
+
+#### C.1 Stepper Flow
+
+**User story:** I can add a plant via photo or manual entry with guidance on confidence/quality.
+
+**Steps**
+
+1. **Photo**
+   * Photo picker (existing validation: type/size/dimensions/orientation).
+   * Show PlantNet/ChatGPT status chips (from current PoC).
+2. **Candidates**
+   * List top candidates + Confidence Badge (High/Med/Low).
+   * If Low, run Phase 1 loop (ask for up to 2 more photos or manual entry).
+3. **Confirm**
+   * Show chosen species + policy summary.
+   * Optional nickname, type if manual.
+   * Save → store plant + navigate to Home (toast: “Plant added”).
+
+**Tasks**
+
+* Extract a reusable Stepper with: `currentStep`, `next`, `back`, `canNext`.
+* Persist step data in memory; mirror step in URL (`?step=`).
+* Reuse confidence meter and microcopy from Phase 1.
+
+**Guardrails**
+
+* Never send images to ChatGPT (already ensured).
+* Retry → fallback seed policy if JSON invalid (already ensured).
+
+**Definition of Done**
+
+* Cancel from any step prompts confirmation and safely exits without orphan data.
+* Saving creates a valid Plant record that appears on Home immediately.
+* Re-adding same species respects cache (no extra ChatGPT call).
+
+### Epic D — Settings
+
+#### D.1 Feature Toggles & Maintenance
+
+**User story:** I can toggle mock/live, manage local data, and see version info.
+
+**Tasks**
+
+* Toggles:
+  * `USE_MOCK_PLANTNET`, `USE_MOCK_CHATGPT` (persisted).
+* Maintenance:
+  * Clear species/plant cache (separately and combined).
+  * View local storage usage (approximate).
+* Keys:
+  * Inputs for PlantNet/OpenAI keys (dev only); mask values; “Test connection” action (pings proxy/endpoint without sending images).
+* About:
+  * App/version, build mode, links to README/help.
+
+**Definition of Done**
+
+* Toggling mocks takes effect on next operation (no hard reload required).
+* Clearing data shows confirmation and resets Home appropriately.
+
+### Epic E — Visual System & Tidy UI
+
+#### E.1 Design Tokens & Components
+
+**User story:** The app looks consistent and predictable.
+
+**Tasks**
+
+* Extract tokens: spacing scale, radius, typography, elevation, color roles (surface/text/primary/error).
+* Core components: Button, Input, Select, Toggle, Tabs, Card, Badge, Banner, Modal, Toast, Skeleton.
+* Standardize error + success banners and inline validation text.
+
+**Definition of Done**
+
+* Buttons/inputs behave the same across screens (hover/focus/disabled).
+* Dark-mode optional (if trivial via tokens).
+
+### Epic F — State, Errors, and Telemetry (lightweight)
+
+#### F.1 App State Boundaries
+
+**Tasks**
+
+* Contexts:
+  * `PlantStoreContext` (list, add, delete).
+  * `SpeciesCacheContext` (get, set, TTL checks).
+  * `ConfigContext` (flags, keys, endpoints).
+* Error taxonomy (reuse existing): `NETWORK_ERROR | INVALID_IMAGE | API_ERROR | SCHEMA_ERROR`.
+* Non-invasive console counters (Phase 5 preview):
+  * `id_success`, `entered_low_confidence_loop`, `policy_cache_hit`, `policy_cache_miss`.
+
+**Definition of Done**
+
+* No cross-context leakage; each context can be mocked in tests.
+* All thrown errors map to user-friendly banners.
+
+### Epic G — Testing & Quality Gates
+
+#### G.1 Unit / Integration
+
+**Tasks**
+
+* Vitest for:
+  * Stepper logic (edge/back/cancel).
+  * Confidence heuristic paths.
+  * Policy schema clamp/validation (already exists—add new cases).
+  * Store operations (add/delete/cache TTL).
+* Component tests:
+  * PlantCard rendering, Settings toggles, Add flow happy + low-confidence.
+
+#### G.2 Accessibility & Visual QA
+
+**Tasks**
+
+* Axe checks in CI for main views.
+* Snapshot tests for PlantCard/Stepper with stable tokens.
+
+**Definition of Done**
+
+* CI green with unit + component + a11y checks.
+* No unhandled promise rejections in console during normal use.
+
+### Epic H — Migration & Hardening
+
+#### H.1 Storage/Schema Interop
+
+**Tasks**
+
+* Confirm Phase 2 SQLite schema aligns with UI needs:
+  * Plant: `id`, `photoUri`, `species {canonical, common, taxonId}`, `type`, `policy`, `createdAt`.
+  * SpeciesProfile: `speciesKey`, `policy`, `source`, `ts`, `ttlDays`.
+* Add migrations for any field additions (e.g., nickname).
+* Add data sanitizers on read (defensive clone, string trims).
+
+**Definition of Done**
+
+* Existing PoC data loads without crashes.
+* New fields default safely (no undefined leaks to UI).
+
+### Implementation Order (suggested)
+
+1. A.1 Routes & Tabs
+2. E.1 Tokens & core components (enough to style the three screens)
+3. B.1 Home list/cards (+ empty/loading/error)
+4. C.1 Add Plant stepper (wire to existing PlantNet/ChatGPT flows)
+5. D.1 Settings (toggles, clear data, keys)
+6. F Contexts consolidation + error taxonomy + light telemetry
+7. G Tests & a11y checks
+8. H Migration polish
+
+### Acceptance Criteria (Phase 3)
+
+* Two persistent tabs (Home, Settings) + `/add` stepper route.
+* Users can add a plant (photo or manual fallback), see confidence, confirm, and save; saved plant appears on Home.
+* Home shows readable PlantCards, delete works safely.
+* Settings toggles and data management work; keys masked; “Test connection” succeeds/fails clearly.
+* All screens have defined empty/loading/error states.
+* Accessibility: keyboard navigation works; clear focus; labels/alt text present.
+* Tests cover stepper logic, store operations, rendering of key components; CI passes.
+
+### Risks & Mitigations
+
+* Routing state complexity (stepper + URL): keep step data in memory, mirror step param only; on reload mid-flow, resume or safely reset to Photo.
+* Local caches desync: centralize reads/writes through `PlantStoreContext` and `SpeciesCacheContext`.
+* UI drift: enforce tokens and shared components early; lint for classnames if using utility CSS.
+
+### Concrete tickets (copy/paste into your tracker)
+
+* Router + Tabs: add `/`, `/add`, `/settings`; TabBar with icons/labels; URL sync.
+* Tokens + Components: create tokens; Button/Input/Select/Badge/Card/Banner/Modal/Toast/Skeleton.
+* Home List: query plants; render PlantCard; empty/loading/error; delete with confirm + toast.
+* Add Flow: Stepper shell; Photo → Candidates → Confirm; cancel/back/next guards; save→Home.
+* Low-Confidence Loop: reuse Phase 1 logic; additional photos + manual fallback path.
+* Settings: toggles (mock flags), clear cache/data, keys form (masked), test connection action, about/version.
+* Contexts: `PlantStoreContext`, `SpeciesCacheContext`, `ConfigContext`; unify error mapping.
+* Telemetry (console-only): `id_success`, `low_conf_entered`, `cache_hit/miss`; doc where incremented.
+* Tests: unit (stepper, schema clamp, store), component (PlantCard, Settings, Add happy/low).
+* A11y pass: axe checks, focus order, alt text; Lighthouse ≥95 on Home & Add.
+* Migrations/Sanitizers: ensure older data loads; default nickname/type; sanitize strings.
 
 ---
 
