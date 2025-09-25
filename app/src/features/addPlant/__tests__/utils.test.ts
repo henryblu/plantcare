@@ -107,7 +107,7 @@ describe("formatPercentage", () => {
 
 describe("confidence assessment", () => {
   const sampleCandidates: IdentificationCandidate[] = [
-    { speciesKey: "plant-a", canonicalName: "Plant A", score: 0.62, source: "plantnet" },
+    { speciesKey: "plant-a", canonicalName: "Plant A", score: 0.58, source: "plantnet" },
     { speciesKey: "plant-b", canonicalName: "Plant B", score: 0.31, source: "plantnet" },
   ];
 

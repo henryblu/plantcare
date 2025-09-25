@@ -53,6 +53,7 @@ const DEFAULT_TEMPERATURE = 0.2;
 const DEFAULT_MAX_ATTEMPTS = 2;
 const DEFAULT_OPENAI_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 const DEFAULT_PROXY_ENDPOINT = '/api/openai/policy';
+const DEFAULT_CACHE_TTL_DAYS = 180;
 
 const resolveEndpointUrl = (endpoint: string): string => {
   if (!endpoint) {
@@ -369,6 +370,8 @@ export class ChatGptPolicyService {
       confidence: request.confidence,
       moisturePolicy: cloneMoisturePolicy(normalized.moisturePolicy),
       source,
+      ttlDays: DEFAULT_CACHE_TTL_DAYS,
+      refreshedAt: timestamp,
       updatedAt: timestamp,
       createdAt: timestamp,
     };

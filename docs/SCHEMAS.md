@@ -92,6 +92,16 @@
       "type": "string",
       "enum": ["chatgpt", "seed", "cache", "manual"]
     },
+    "ttlDays": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Number of days the cached entry remains fresh."
+    },
+    "refreshedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when the cached entry was last refreshed."
+    },
     "updatedAt": {
       "type": "string",
       "format": "date-time"
@@ -144,6 +154,30 @@
       "additionalProperties": false
     }
   }
+}
+```
+
+### Example cached payload
+
+```json
+{
+  "speciesKey": "ficus-elastica",
+  "canonicalName": "Ficus elastica",
+  "commonName": "Rubber plant",
+  "type": "tropical",
+  "confidence": 0.84,
+  "moisturePolicy": {
+    "waterIntervalDays": 7,
+    "soilMoistureThreshold": 30,
+    "humidityPreference": "medium",
+    "lightRequirement": "bright-indirect",
+    "notes": ["Let the top inch of soil dry before watering."]
+  },
+  "source": "chatgpt",
+  "ttlDays": 180,
+  "refreshedAt": "2024-01-01T00:00:00.000Z",
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "createdAt": "2024-01-01T00:00:00.000Z"
 }
 ```
 

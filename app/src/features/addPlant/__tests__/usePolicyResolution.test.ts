@@ -32,6 +32,8 @@ const profile: SpeciesProfile = {
     notes: ["Let the top inch of soil dry before watering."],
   },
   source: "chatgpt",
+  ttlDays: 180,
+  refreshedAt: "2024-01-01T00:00:00.000Z",
   updatedAt: "2024-01-01T00:00:00.000Z",
 };
 
