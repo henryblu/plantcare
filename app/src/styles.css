@@ -179,11 +179,30 @@ p {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
+.plant-list__virtual-outer {
+  position: relative;
+  width: 100%;
+}
+
+.plant-list__virtual-inner {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  display: grid;
+  gap: inherit;
+  will-change: transform;
+}
+
 .plant-card {
   grid-template-columns: 128px 1fr;
   align-items: stretch;
   position: relative;
   overflow: hidden;
+}
+
+.plant-card:focus-visible {
+  outline: 2px solid var(--color-secondary-mid);
+  outline-offset: 4px;
 }
 
 .plant-card__media {

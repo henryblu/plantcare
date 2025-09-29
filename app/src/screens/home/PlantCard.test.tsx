@@ -46,7 +46,7 @@ describe("PlantCard", () => {
 
     render(<PlantCard plant={basePlant} profile={baseProfile} onRename={handleRename} />, { legacyRoot: true });
 
-    const [card] = screen.getAllByRole("article", { name: basePlant.nickname ?? "" });
+    const [card] = screen.getAllByRole("listitem", { name: basePlant.nickname ?? "" });
     const utils = within(card);
     const menuButton = utils.getByRole("button", { name: /plant actions/i });
     fireEvent.click(menuButton);
@@ -70,7 +70,7 @@ describe("PlantCard", () => {
 
     render(<PlantCard plant={basePlant} profile={baseProfile} onDelete={handleDelete} />, { legacyRoot: true });
 
-    const [card] = screen.getAllByRole("article", { name: basePlant.nickname ?? "" });
+    const [card] = screen.getAllByRole("listitem", { name: basePlant.nickname ?? "" });
     const utils = within(card);
     const menuButton = utils.getByRole("button", { name: /plant actions/i });
     fireEvent.click(menuButton);
