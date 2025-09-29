@@ -4,10 +4,12 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { PlantStore } from "@core/state/store";
+import { PlantStore, type StoreState } from "@core/state/store";
 import {
   createPlantFlow,
   type CreatePlantFlow,
@@ -295,5 +297,52 @@ export const usePlantCareServices = (): PlantCareContextValue => {
     throw new Error("usePlantCareServices must be used within a PlantCareProvider.");
   }
   return context;
+};
+
+interface PlantStoreSnapshot {
+  plants: Plant[];
+  speciesProfiles: Record<string, SpeciesProfile>;
+}
+
+const EMPTY_SNAPSHOT: PlantStoreSnapshot = {
+  plants: [],
+  speciesProfiles: {},
+};
+
+export const usePlantStoreSnapshot = (): PlantStoreSnapshot => {
+  const { store } = usePlantCareServices();
+
+  const subscribe = useCallback(
+    (listener: () => void) => store.subscribe(listener),
+    [store],
+  );
+
+  const snapshotRef = useRef<{ state: StoreState | null; snapshot: PlantStoreSnapshot }>({
+    state: null,
+    snapshot: EMPTY_SNAPSHOT,
+  });
+
+  const getSnapshot = useCallback((): PlantStoreSnapshot => {
+    const state = store.getState();
+    const cached = snapshotRef.current;
+    if (cached.state === state) {
+      return cached.snapshot;
+    }
+
+    const speciesProfiles = Object.fromEntries(
+      Object.entries(state.speciesCache).map(([key, entry]) => [key, entry.profile]),
+    );
+
+    const snapshot: PlantStoreSnapshot = {
+      plants: state.plants,
+      speciesProfiles,
+    };
+
+    snapshotRef.current = { state, snapshot };
+    return snapshot;
+  }, [store]);
+
+  const getServerSnapshot = useCallback(() => snapshotRef.current.snapshot, []);
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 };
 
