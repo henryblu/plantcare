@@ -19,7 +19,7 @@ const formatDate = (value?: string) => {
   return date.toLocaleString();
 };
 
-const EmptyState = ({ onAddPlant }: Pick<HomeScreenProps, "onAddPlant">) => (
+const EmptyState = ({ onAddPlant, actionsDisabled }: Pick<HomeScreenProps, "onAddPlant"> & { actionsDisabled: boolean }) => (
   <div className="card card--empty">
     <div className="empty-state">
       <div className="empty-state__illustration" aria-hidden="true">
@@ -41,7 +41,13 @@ const EmptyState = ({ onAddPlant }: Pick<HomeScreenProps, "onAddPlant">) => (
       </div>
       <h3>Grow your indoor garden</h3>
       <p className="muted-text">Add your first plant to see moisture guidance and personalised care policies.</p>
-      <button className="primary-button" type="button" onClick={onAddPlant}>
+      <button
+        className="primary-button"
+        type="button"
+        onClick={onAddPlant}
+        disabled={actionsDisabled}
+        aria-disabled={actionsDisabled}
+      >
         Add your first plant
       </button>
     </div>
@@ -87,6 +93,8 @@ const HomeScreen = ({
   errorMessage,
   onRetry,
 }: HomeScreenProps) => {
+  const actionsDisabled = status !== "ready";
+
   if (status === "loading") {
     return (
       <div className="card card--list" aria-busy="true">
@@ -113,7 +121,7 @@ const HomeScreen = ({
   }
 
   if (plants.length === 0) {
-    return <EmptyState onAddPlant={onAddPlant} />;
+    return <EmptyState onAddPlant={onAddPlant} actionsDisabled={actionsDisabled} />;
   }
 
   return (
@@ -123,7 +131,13 @@ const HomeScreen = ({
           <h3>Saved plants</h3>
           <p className="muted-text">Your personalised guidance stays on this device.</p>
         </div>
-        <button className="secondary-button" type="button" onClick={onAddPlant}>
+        <button
+          className="secondary-button"
+          type="button"
+          onClick={onAddPlant}
+          disabled={actionsDisabled}
+          aria-disabled={actionsDisabled}
+        >
           Add plant
         </button>
       </div>

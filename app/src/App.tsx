@@ -69,6 +69,7 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
     : hydrateError
       ? "error"
       : "ready";
+  const canNavigateToAddPlant = homeStatus === "ready";
 
   useEffect(() => {
     if (location.route !== "add") return;
@@ -81,8 +82,11 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
   }, [buildPath, location.route, location.search, navigate]);
 
   const handleAddPlant = useCallback(() => {
+    if (!canNavigateToAddPlant) {
+      return;
+    }
     navigate(buildPath("/add", "step=photo"));
-  }, [buildPath, navigate]);
+  }, [buildPath, navigate, canNavigateToAddPlant]);
 
   const handleConfigChange = useCallback((next: UiConfig) => {
     setUiConfig(next);
@@ -133,7 +137,13 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
             <p>Keep moisture policies and care notes organised. Everything stays on this device.</p>
           </div>
           <div className="home-hero-actions">
-            <button className="primary-button" type="button" onClick={handleAddPlant}>
+            <button
+              className="primary-button"
+              type="button"
+              onClick={handleAddPlant}
+              disabled={!canNavigateToAddPlant}
+              aria-disabled={!canNavigateToAddPlant}
+            >
               Add a plant
             </button>
             {heroStatus}
