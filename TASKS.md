@@ -146,11 +146,11 @@
 
 * Data source: use the local store (SQLite layer) read.
 * PlantCard component shows: photo (or placeholder), canonical/common name, one-line moisture policy summary (e.g., “Mostly dry 2–3 days; water <12%”), and last updated.
-* Actions menu (kebab):
+* [x] Actions menu (kebab):
   * View details (future)
-  * Rename/nickname (optional; simple inline edit)
-  * Delete (with confirm modal)
-* Basic sort: by `createdAt` desc (default).
+  * [x] Rename/nickname (optional; simple inline edit)
+  * [x] Delete (with confirm modal)
+* [x] Basic sort: by `createdAt` desc (default).
 
 **Definition of Done**
 
