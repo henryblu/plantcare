@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Plant } from "@core/models/plant";
 import type { SpeciesProfile } from "@core/models/speciesProfile";
 import PlantCard from "./home/PlantCard";
@@ -92,6 +92,8 @@ const HomeScreen = ({
   onRenamePlant,
   onDeletePlant,
 }: HomeScreenProps) => {
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const isBrowser = typeof window !== "undefined";
   const actionsDisabled = status !== "ready";
   const sortedPlants = useMemo(() => {
     return [...plants].sort((a, b) => {
@@ -103,6 +105,78 @@ const HomeScreen = ({
       return bDate - aDate;
     });
   }, [plants]);
+
+  const shouldVirtualize = sortedPlants.length > 50;
+  const [viewportHeight, setViewportHeight] = useState<number>(() => (isBrowser ? window.innerHeight : 0));
+  const [scrollY, setScrollY] = useState<number>(() => (isBrowser ? window.scrollY : 0));
+  const [listOffset, setListOffset] = useState(0);
+  const [rowGap, setRowGap] = useState(0);
+  const [itemHeight, setItemHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!shouldVirtualize || !isBrowser) return;
+    const handleScroll = () => setScrollY(window.scrollY);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isBrowser, shouldVirtualize]);
+
+  useEffect(() => {
+    if (!shouldVirtualize || !isBrowser) return;
+    const handleResize = () => setViewportHeight(window.innerHeight);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isBrowser, shouldVirtualize]);
+
+  useEffect(() => {
+    if (!shouldVirtualize || !isBrowser || !listRef.current) return;
+    const updateMetrics = () => {
+      if (!listRef.current) return;
+      const rect = listRef.current.getBoundingClientRect();
+      setListOffset(rect.top + window.scrollY);
+      const computedStyle = window.getComputedStyle(listRef.current);
+      const gapValue = parseFloat(computedStyle.rowGap || computedStyle.gap || "0");
+      setRowGap(Number.isFinite(gapValue) ? gapValue : 0);
+    };
+    updateMetrics();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateMetrics);
+    observer?.observe(listRef.current);
+    window.addEventListener("resize", updateMetrics);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", updateMetrics);
+    };
+  }, [isBrowser, shouldVirtualize, sortedPlants.length]);
+
+  const handleItemMeasure = useCallback((element: HTMLElement | null) => {
+    if (!element) return;
+    const rect = element.getBoundingClientRect();
+    if (rect.height <= 0) return;
+    setItemHeight((previous) => {
+      if (previous === null) return rect.height;
+      if (Math.abs(previous - rect.height) > 1) {
+        return rect.height;
+      }
+      return previous;
+    });
+  }, []);
+
+  const effectiveItemHeight = itemHeight ?? 220;
+  const gap = rowGap || 16;
+  const viewportBottom = scrollY + viewportHeight;
+  const startIndex = shouldVirtualize
+    ? Math.max(0, Math.floor((scrollY - listOffset) / (effectiveItemHeight + gap)))
+    : 0;
+  const visibleCount = shouldVirtualize
+    ? Math.ceil(Math.max(viewportBottom - listOffset, viewportHeight) / (effectiveItemHeight + gap)) + 8
+    : sortedPlants.length;
+  const endIndex = shouldVirtualize ? Math.min(sortedPlants.length, startIndex + visibleCount) : sortedPlants.length;
+  const visiblePlants = shouldVirtualize ? sortedPlants.slice(startIndex, endIndex) : sortedPlants;
+  const totalHeight = shouldVirtualize
+    ? sortedPlants.length * effectiveItemHeight + Math.max(sortedPlants.length - 1, 0) * gap
+    : undefined;
+  const offsetY = shouldVirtualize ? startIndex * (effectiveItemHeight + gap) : 0;
 
   if (status === "loading") {
     return (
@@ -164,19 +238,43 @@ const HomeScreen = ({
           )}
         </div>
       )}
-      <div className="list plant-list">
-        {sortedPlants.map((plant) => {
-          const profile = plant.speciesProfile ?? speciesCache[plant.speciesKey];
-          return (
-            <PlantCard
-              key={plant.id}
-              plant={plant}
-              profile={profile}
-              onRename={onRenamePlant}
-              onDelete={onDeletePlant}
-            />
-          );
-        })}
+      <div className="list plant-list" ref={shouldVirtualize ? listRef : null} role="list">
+        {shouldVirtualize ? (
+          <div className="plant-list__virtual-outer" style={{ height: totalHeight }} role="presentation">
+            <div
+              className="plant-list__virtual-inner"
+              style={{ transform: `translateY(${offsetY}px)` }}
+              role="presentation"
+            >
+              {visiblePlants.map((plant, index) => {
+                const profile = plant.speciesProfile ?? speciesCache[plant.speciesKey];
+                return (
+                  <PlantCard
+                    key={plant.id}
+                    plant={plant}
+                    profile={profile}
+                    onRename={onRenamePlant}
+                    onDelete={onDeletePlant}
+                    ref={index === 0 ? handleItemMeasure : undefined}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          sortedPlants.map((plant) => {
+            const profile = plant.speciesProfile ?? speciesCache[plant.speciesKey];
+            return (
+              <PlantCard
+                key={plant.id}
+                plant={plant}
+                profile={profile}
+                onRename={onRenamePlant}
+                onDelete={onDeletePlant}
+              />
+            );
+          })
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,13 @@
-import { FormEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  FormEvent,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { Plant } from "@core/models/plant";
 import type { SpeciesProfile } from "@core/models/speciesProfile";
 import { buildPlantPolicySummary, formatLastUpdated, selectPlantPolicy } from "./policySummary";
@@ -17,7 +26,10 @@ const resolveDisplayNames = (plant: Plant, profile?: SpeciesProfile) => {
   return { primary, secondary, tertiary };
 };
 
-const PlantCard = ({ plant, profile, onRename, onDelete }: PlantCardProps) => {
+const PlantCard = forwardRef<HTMLElement, PlantCardProps>(function PlantCard(
+  { plant, profile, onRename, onDelete }: PlantCardProps,
+  forwardedRef,
+) {
   const menuButtonId = useId();
   const confirmTitleId = useId();
   const confirmDescId = useId();
@@ -131,13 +143,19 @@ const PlantCard = ({ plant, profile, onRename, onDelete }: PlantCardProps) => {
     [plant.updatedAt, profile?.updatedAt],
   );
 
-  const photoAlt = `${primary} photo`;
+  const photoAlt = plant.photoUri ? `${primary} plant photo` : `${primary} placeholder image`;
 
   return (
-    <article className="card plant-card" aria-label={primary}>
+    <article
+      className="card plant-card"
+      aria-label={primary}
+      tabIndex={0}
+      role="listitem"
+      ref={forwardedRef}
+    >
       <div className="plant-card__media">
         {plant.photoUri ? (
-          <img src={plant.photoUri} alt={photoAlt} className="plant-card__image" />
+          <img src={plant.photoUri} alt={photoAlt} className="plant-card__image" loading="lazy" />
         ) : (
           <div className="plant-card__placeholder" aria-hidden="true">
             <svg viewBox="0 0 80 80" role="presentation" focusable="false">
@@ -272,6 +290,6 @@ const PlantCard = ({ plant, profile, onRename, onDelete }: PlantCardProps) => {
       )}
     </article>
   );
-};
+});
 
 export default PlantCard;
