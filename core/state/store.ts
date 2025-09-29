@@ -259,6 +259,7 @@ export class PlantStore {
   private state: StoreState = { ...DEFAULT_STATE };
   private readonly keys: StorageKeys;
   private readonly listeners: Set<StoreListener> = new Set();
+  private snapshotCache: StoreState | null = null;
 
   constructor(private readonly storage: StorageAdapter, options: StoreOptions = {}) {
     this.keys = {
@@ -274,7 +275,12 @@ export class PlantStore {
     };
   }
 
+  private invalidateSnapshot(): void {
+    this.snapshotCache = null;
+  }
+
   private notifyListeners(): void {
+    this.invalidateSnapshot();
     if (this.listeners.size === 0) {
       return;
     }
@@ -300,6 +306,7 @@ export class PlantStore {
       plants: plantResult.plants,
       speciesCache: speciesResult.entries,
     };
+    this.invalidateSnapshot();
 
     const expired = await this.purgeStaleSpecies();
 
@@ -331,6 +338,7 @@ export class PlantStore {
       );
       await this.storage.removeItem(this.keys.speciesCache);
       this.state.speciesCache = {};
+      this.invalidateSnapshot();
     } else {
       let shouldPersistSpecies = false;
       if (speciesResult.migrated) {
@@ -359,12 +367,19 @@ export class PlantStore {
   }
 
   getState(): StoreState {
-    return {
+    if (this.snapshotCache) {
+      return this.snapshotCache;
+    }
+
+    const snapshot: StoreState = {
       plants: this.state.plants.map((plant) => clonePlant(this.withSpecies(plant))),
       speciesCache: Object.fromEntries(
         Object.entries(this.state.speciesCache).map(([key, entry]) => [key, cloneCachedSpeciesEntry(entry)]),
       ),
     };
+
+    this.snapshotCache = snapshot;
+    return snapshot;
   }
 
   listPlants(): Plant[] {
@@ -394,6 +409,7 @@ export class PlantStore {
     } else {
       this.state.plants.push(normalized);
     }
+    this.invalidateSnapshot();
     await this.persistPlants();
     this.notifyListeners();
   }
@@ -402,6 +418,7 @@ export class PlantStore {
     const next = this.state.plants.filter((plant) => plant.id !== id);
     if (next.length === this.state.plants.length) return;
     this.state.plants = next;
+    this.invalidateSnapshot();
     await this.persistPlants();
     this.notifyListeners();
   }
@@ -420,12 +437,14 @@ export class PlantStore {
       refreshedAt,
       source,
     };
+    this.invalidateSnapshot();
     await this.persistSpeciesCache();
     this.notifyListeners();
   }
 
   async clear(): Promise<void> {
     this.state = { ...DEFAULT_STATE };
+    this.invalidateSnapshot();
     await Promise.all([
       this.storage.removeItem(this.keys.plants),
       this.storage.removeItem(this.keys.speciesCache),
@@ -480,14 +499,20 @@ export class PlantStore {
 
   private removeExpiredSpecies(referenceMs: number): string[] {
     const expired: string[] = [];
+    let mutated = false;
     Object.entries(this.state.speciesCache).forEach(([key, entry]) => {
       const refreshedMs = Date.parse(entry.refreshedAt);
       const ttlMs = entry.ttlDays * MS_PER_DAY;
       if (!Number.isFinite(refreshedMs) || referenceMs - refreshedMs >= ttlMs) {
         delete this.state.speciesCache[key];
         expired.push(key);
+        mutated = true;
       }
     });
+    if (mutated) {
+      this.invalidateSnapshot();
+    }
     return expired;
   }
 }
+

@@ -4,11 +4,12 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { PlantStore } from "@core/state/store";
+import { PlantStore, type StoreState } from "@core/state/store";
 import {
   createPlantFlow,
   type CreatePlantFlow,
@@ -316,17 +317,32 @@ export const usePlantStoreSnapshot = (): PlantStoreSnapshot => {
     [store],
   );
 
+  const snapshotRef = useRef<{ state: StoreState | null; snapshot: PlantStoreSnapshot }>({
+    state: null,
+    snapshot: EMPTY_SNAPSHOT,
+  });
+
   const getSnapshot = useCallback((): PlantStoreSnapshot => {
     const state = store.getState();
+    const cached = snapshotRef.current;
+    if (cached.state === state) {
+      return cached.snapshot;
+    }
+
     const speciesProfiles = Object.fromEntries(
       Object.entries(state.speciesCache).map(([key, entry]) => [key, entry.profile]),
     );
-    return {
+
+    const snapshot: PlantStoreSnapshot = {
       plants: state.plants,
       speciesProfiles,
     };
+
+    snapshotRef.current = { state, snapshot };
+    return snapshot;
   }, [store]);
 
-  return useSyncExternalStore(subscribe, getSnapshot, () => EMPTY_SNAPSHOT);
+  const getServerSnapshot = useCallback(() => snapshotRef.current.snapshot, []);
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 };
 

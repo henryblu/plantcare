@@ -23,6 +23,8 @@ const DEFAULT_SNAPSHOT: NavigationSnapshot = {
   search: "",
 };
 
+let lastSnapshot: NavigationSnapshot = DEFAULT_SNAPSHOT;
+
 const isBrowser = typeof window !== "undefined";
 
 const getRouteName = (pathname: string): NavigationSnapshot["route"] => {
@@ -43,11 +45,15 @@ const readSnapshot = (): NavigationSnapshot => {
   }
   const { pathname, search } = window.location;
   const normalizedPathname: RoutePath = pathname === "/add" || pathname === "/settings" ? pathname : "/";
-  return {
+  if (lastSnapshot.pathname === normalizedPathname && lastSnapshot.search === search) {
+    return lastSnapshot;
+  }
+  lastSnapshot = {
     route: getRouteName(normalizedPathname),
     pathname: normalizedPathname,
     search,
   };
+  return lastSnapshot;
 };
 
 type NavigationListener = () => void;
