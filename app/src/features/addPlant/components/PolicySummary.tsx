@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import type { SpeciesProfile } from "@core/models/speciesProfile";
 import type { IdentificationCandidate } from "@services/id/types";
 import { formatPercentage } from "../utils";
@@ -5,6 +7,7 @@ import { formatPercentage } from "../utils";
 export interface PolicySummaryProps {
   candidate: IdentificationCandidate;
   profile: SpeciesProfile;
+  children?: ReactNode;
 }
 
 const formatLightLabel = (value: string): string => value.replace(/-/g, " ");
@@ -42,7 +45,7 @@ const buildOneLineSummary = (profile: SpeciesProfile): string => {
   return `${cadence}${threshold}; prefers ${light} light${humidity}.`;
 };
 
-const PolicySummary = ({ candidate, profile }: PolicySummaryProps) => {
+const PolicySummary = ({ candidate, profile, children }: PolicySummaryProps) => {
   const summaryLine = buildOneLineSummary(profile);
   const { moisturePolicy } = profile;
   const notes = moisturePolicy.notes ?? [];
@@ -99,6 +102,7 @@ const PolicySummary = ({ candidate, profile }: PolicySummaryProps) => {
           </ul>
         </div>
       )}
+      {children}
     </section>
   );
 };

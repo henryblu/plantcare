@@ -1,13 +1,17 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+
 import ManualEntryForm from "@app/features/addPlant/components/ManualEntryForm";
 import CandidateList from "@app/features/addPlant/components/CandidateList";
 import PolicySummary from "@app/features/addPlant/components/PolicySummary";
 import { useAddPlantFlow } from "@app/features/addPlant/hooks/useAddPlantFlow";
-import { formatPercentage } from "@app/features/addPlant/utils";
+import { buildPolicyRequest, formatPercentage } from "@app/features/addPlant/utils";
 import { usePlantCareServices } from "../providers/PlantCareProvider";
+import { useNavigation } from "../navigation/router";
 
 const AddPlantScreen = () => {
-  const { plantNetConfigured, openAiConfigured, identify, resolvePolicy, manualCandidate } =
+  const { plantNetConfigured, openAiConfigured, identify, resolvePolicy, manualCandidate, createPlant } =
     usePlantCareServices();
+  const { navigate, buildPath } = useNavigation();
 
   const {
     fileInputRef,
@@ -49,6 +53,9 @@ const AddPlantScreen = () => {
     plantNetConfigured,
   });
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   const confidenceChipTone = confidence
     ? confidence.level === "high"
       ? "chip--success"
@@ -60,6 +67,47 @@ const AddPlantScreen = () => {
   const confidenceLabel = confidence
     ? `${confidence.level.charAt(0).toUpperCase()}${confidence.level.slice(1)}`
     : null;
+
+  const addButtonLabel = isSaving ? "Adding..." : "Add to my garden";
+
+  const canAddPlant = useMemo(
+    () => Boolean(selectedCandidate && selectedProfile && !isProcessing && !isSaving),
+    [isProcessing, isSaving, selectedCandidate, selectedProfile],
+  );
+
+  useEffect(() => {
+    setSaveError(null);
+    setIsSaving(false);
+  }, [selectedKey]);
+
+  const handleAddPlant = useCallback(async () => {
+    if (!selectedCandidate || !selectedProfile || isSaving || isProcessing) {
+      return;
+    }
+
+    setSaveError(null);
+    setIsSaving(true);
+    try {
+      await createPlant({
+        species: buildPolicyRequest(selectedCandidate),
+        plant: {},
+      });
+      navigate(buildPath("/", ""), { replace: true });
+    } catch (error) {
+      console.error("[AddPlantScreen] Failed to add plant", error);
+      setSaveError((error as Error).message ?? "Failed to add plant. Try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [
+    buildPath,
+    createPlant,
+    isProcessing,
+    isSaving,
+    navigate,
+    selectedCandidate,
+    selectedProfile,
+  ]);
 
   return (
     <div className="content-stack">
@@ -238,7 +286,25 @@ const AddPlantScreen = () => {
       />
 
       {selectedCandidate && selectedProfile && (
-        <PolicySummary candidate={selectedCandidate} profile={selectedProfile} />
+        <PolicySummary candidate={selectedCandidate} profile={selectedProfile}>
+          <div className="policy-summary__actions">
+            {saveError && (
+              <div className="error-banner error-banner--inline" role="alert">
+                <div className="error-banner__message">{saveError}</div>
+              </div>
+            )}
+            <div className="button-row">
+              <button
+                type="button"
+                className="primary-button"
+                onClick={handleAddPlant}
+                disabled={!canAddPlant}
+              >
+                {addButtonLabel}
+              </button>
+            </div>
+          </div>
+        </PolicySummary>
       )}
     </div>
   );
