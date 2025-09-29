@@ -60,6 +60,7 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
     clearStore,
     plantNetConfigured,
     openAiConfigured,
+    store,
   } = usePlantCareServices();
   const { plants, speciesProfiles } = usePlantStoreSnapshot();
   const [uiConfig, setUiConfig] = useState<UiConfig>(initialConfig);
@@ -99,6 +100,31 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
   const handleReload = useCallback(() => {
     void reloadStore();
   }, [reloadStore]);
+
+  const handleRenamePlant = useCallback(
+    async (id: string, nickname: string | null) => {
+      const existing = store.getPlant(id);
+      if (!existing) {
+        return;
+      }
+
+      const next = {
+        ...existing,
+        nickname: nickname ?? undefined,
+        updatedAt: new Date().toISOString(),
+      };
+
+      await store.upsertPlant(next);
+    },
+    [store],
+  );
+
+  const handleDeletePlant = useCallback(
+    async (id: string) => {
+      await store.removePlant(id);
+    },
+    [store],
+  );
 
   const heroStatus = (
     <div className="hero-status">
@@ -156,6 +182,8 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
           status={homeStatus}
           errorMessage={hydrateError}
           onRetry={handleReload}
+          onRenamePlant={handleRenamePlant}
+          onDeletePlant={handleDeletePlant}
         />
       </div>
     );
