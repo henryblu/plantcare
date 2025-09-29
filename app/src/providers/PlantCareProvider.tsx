@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { PlantStore } from "@core/state/store";
@@ -295,5 +296,37 @@ export const usePlantCareServices = (): PlantCareContextValue => {
     throw new Error("usePlantCareServices must be used within a PlantCareProvider.");
   }
   return context;
+};
+
+interface PlantStoreSnapshot {
+  plants: Plant[];
+  speciesProfiles: Record<string, SpeciesProfile>;
+}
+
+const EMPTY_SNAPSHOT: PlantStoreSnapshot = {
+  plants: [],
+  speciesProfiles: {},
+};
+
+export const usePlantStoreSnapshot = (): PlantStoreSnapshot => {
+  const { store } = usePlantCareServices();
+
+  const subscribe = useCallback(
+    (listener: () => void) => store.subscribe(listener),
+    [store],
+  );
+
+  const getSnapshot = useCallback((): PlantStoreSnapshot => {
+    const state = store.getState();
+    const speciesProfiles = Object.fromEntries(
+      Object.entries(state.speciesCache).map(([key, entry]) => [key, entry.profile]),
+    );
+    return {
+      plants: state.plants,
+      speciesProfiles,
+    };
+  }, [store]);
+
+  return useSyncExternalStore(subscribe, getSnapshot, () => EMPTY_SNAPSHOT);
 };
 

@@ -253,15 +253,38 @@ interface StoreOptions {
   storageKeys?: Partial<StorageKeys>;
 }
 
+type StoreListener = () => void;
+
 export class PlantStore {
   private state: StoreState = { ...DEFAULT_STATE };
   private readonly keys: StorageKeys;
+  private readonly listeners: Set<StoreListener> = new Set();
 
   constructor(private readonly storage: StorageAdapter, options: StoreOptions = {}) {
     this.keys = {
       ...DEFAULT_KEYS,
       ...options.storageKeys,
     };
+  }
+
+  subscribe(listener: StoreListener): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private notifyListeners(): void {
+    if (this.listeners.size === 0) {
+      return;
+    }
+    this.listeners.forEach((listener) => {
+      try {
+        listener();
+      } catch (error) {
+        console.error('[PlantStore] Listener execution failed', error);
+      }
+    });
   }
 
   async hydrate(): Promise<void> {
@@ -331,6 +354,8 @@ export class PlantStore {
         await this.persistSpeciesCache();
       }
     }
+
+    this.notifyListeners();
   }
 
   getState(): StoreState {
@@ -370,6 +395,7 @@ export class PlantStore {
       this.state.plants.push(normalized);
     }
     await this.persistPlants();
+    this.notifyListeners();
   }
 
   async removePlant(id: string): Promise<void> {
@@ -377,6 +403,7 @@ export class PlantStore {
     if (next.length === this.state.plants.length) return;
     this.state.plants = next;
     await this.persistPlants();
+    this.notifyListeners();
   }
 
   async upsertSpeciesProfile(profile: SpeciesProfile, metadata: SpeciesCacheMetadata = {}): Promise<void> {
@@ -394,6 +421,7 @@ export class PlantStore {
       source,
     };
     await this.persistSpeciesCache();
+    this.notifyListeners();
   }
 
   async clear(): Promise<void> {
@@ -402,6 +430,7 @@ export class PlantStore {
       this.storage.removeItem(this.keys.plants),
       this.storage.removeItem(this.keys.speciesCache),
     ]);
+    this.notifyListeners();
   }
 
   private withSpecies(plant: Plant): Plant {
