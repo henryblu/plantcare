@@ -39,7 +39,7 @@
 ## 8. Documentation & Handoff
 - Keep README setup steps and `docs/OPERATIONS.md` current with feature flags, scripts, and run instructions.
 - Version control demo assets and seed scripts under `assets/` to ensure mock mode stays reliable.
-- Update `TASKS.md` and `PROJECT_BRIEF.md` whenever prompts, API contracts, or milestone expectations change.
+- Update `docs/PROJECT_OVERVIEW.md` whenever prompts, API contracts, or milestone expectations change.
 
 ## 9. Coding Style & Practices
 - Favor small, pure functions with explicit typing; isolate side effects for auditability and portability.
