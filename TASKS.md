@@ -109,18 +109,18 @@
 
 **Tasks**
 
-* Introduce a lightweight router (e.g., file-based or a minimal wrapper) with three routes:
+* [x] Introduce a lightweight router (e.g., file-based or a minimal wrapper) with three routes:
   * `/` → Home
   * `/add` → Add Plant (stepper)
   * `/settings` → Settings
-* Implement a top/bottom TabBar (sticky) with icons + labels: Home, Settings. The Add Plant entry point is a prominent CTA on Home (and optional floating button).
-* Preserve deep-linkable step state on `/add` via `?step=photo|candidates|confirm`.
+* [x] Implement a top/bottom TabBar (sticky) with icons + labels: Home, Settings. The Add Plant entry point is a prominent CTA on Home (and optional floating button).
+* [x] Preserve deep-linkable step state on `/add` via `?step=photo|candidates|confirm`.
 
 **Definition of Done**
 
-* Keyboard/tab focus order is logical.
-* URL reflects current screen (including step changes).
-* Navigating back/forward preserves state appropriately.
+* [x] Keyboard/tab focus order is logical.
+* [x] URL reflects current screen (including step changes).
+* [x] Navigating back/forward preserves state appropriately.
 
 #### A.2 Empty/Loading/Error States
 
@@ -128,13 +128,13 @@
 
 **Tasks**
 
-* Home empty state: simple illustration + “Add your first plant” CTA.
-* Skeletons: plant list/tiles while loading.
-* Inline errors: non-blocking banners with retry for load failures.
+* [x] Home empty state: simple illustration + “Add your first plant” CTA.
+* [x] Skeletons: plant list/tiles while loading.
+* [x] Inline errors: non-blocking banners with retry for load failures.
 
 **Definition of Done**
 
-* Each screen renders a defined state for: empty, loading, error, content.
+* [x] Each screen renders a defined state for: empty, loading, error, content.
 
 ### Epic B — Home (Saved Plants)
 
