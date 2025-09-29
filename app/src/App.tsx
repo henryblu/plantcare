@@ -64,6 +64,12 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
   const { plants, speciesProfiles } = usePlantStoreSnapshot();
   const [uiConfig, setUiConfig] = useState<UiConfig>(initialConfig);
 
+  const homeStatus: "loading" | "error" | "ready" = !hydrated
+    ? "loading"
+    : hydrateError
+      ? "error"
+      : "ready";
+
   useEffect(() => {
     if (location.route !== "add") return;
     const params = new URLSearchParams(location.search);
@@ -103,30 +109,7 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
 
   let content: JSX.Element;
 
-  if (!hydrated) {
-    content = (
-      <div className="content-stack">
-        <div className="card">
-          <h3>Loading your garden</h3>
-          <p className="muted-text">Restoring saved plants and species policies…</p>
-        </div>
-      </div>
-    );
-  } else if (hydrateError) {
-    content = (
-      <div className="content-stack">
-        <div className="card">
-          <h3>Something went wrong</h3>
-          <p>{hydrateError}</p>
-          <div className="button-row">
-            <button className="primary-button" type="button" onClick={handleReload}>
-              Try again
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  } else if (location.route === "settings") {
+  if (location.route === "settings") {
     content = (
       <div className="content-stack">
         <section className="page-hero page-hero--compact">
@@ -156,7 +139,14 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
             {heroStatus}
           </div>
         </section>
-        <HomeScreen plants={plants} speciesCache={speciesProfiles} onAddPlant={handleAddPlant} />
+        <HomeScreen
+          plants={plants}
+          speciesCache={speciesProfiles}
+          onAddPlant={handleAddPlant}
+          status={homeStatus}
+          errorMessage={hydrateError}
+          onRetry={handleReload}
+        />
       </div>
     );
   }
