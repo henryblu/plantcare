@@ -282,6 +282,14 @@ const AddPlantScreen = () => {
 
   return (
     <div className="content-stack">
+      <input
+        ref={additionalFileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        onChange={handleAdditionalPhotoChange}
+        disabled={isProcessing}
+        style={{ display: "none" }}
+      />
       <section className="page-hero">
         <div>
           <h1>Plant Care Guide</h1>
@@ -430,14 +438,6 @@ const AddPlantScreen = () => {
                 accept="image/jpeg,image/png,image/webp"
                 onChange={handleFileChange}
                 disabled={isProcessing}
-              />
-              <input
-                ref={additionalFileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleAdditionalPhotoChange}
-                disabled={isProcessing}
-                style={{ display: "none" }}
               />
               {preparedImages.length > 0 && (
                 <div className="prepared-photo-list">
