@@ -312,10 +312,11 @@ export const useAddPlantFlow = ({
     [maxPhotos, preparedImages.length],
   );
 
-  const canAddMorePhotos = useMemo(
-    () => confidence?.level === "low" && preparedImages.length < maxPhotos,
-    [confidence, maxPhotos, preparedImages.length],
-  );
+  const canAddMorePhotos = useMemo(() => {
+    if (!confidence) return false;
+    if (confidence.level === "high") return false;
+    return preparedImages.length < maxPhotos;
+  }, [confidence, maxPhotos, preparedImages.length]);
 
   const nextPhotoHint = useMemo(() => {
     if (!canAddMorePhotos) return null;

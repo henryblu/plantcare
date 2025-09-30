@@ -271,7 +271,9 @@ const AddPlantScreen = () => {
   }, [currentStep, disableNavigation, selectedCandidate, selectedProfile, setStep]);
 
   const showConfidence = Boolean(confidence && currentStep !== "photo");
-  const showLowConfidence = confidence?.level === "low" && currentStep !== "photo";
+  const confidenceLevel = confidence?.level ?? null;
+  const showConfidenceNotice = Boolean(confidenceLevel && confidenceLevel !== "high" && currentStep !== "photo");
+  const isLowConfidence = confidenceLevel === "low";
   const showManualRecommended = manualRecommended && currentStep !== "photo";
   const showManualEntryForm = manualMode && currentStep === "candidates";
   const showCandidates = candidates.length > 0 && currentStep === "candidates";
@@ -373,13 +375,17 @@ const AddPlantScreen = () => {
         </div>
       )}
 
-      {showLowConfidence && (
+      {showConfidenceNotice && (
         <div className="status-banner">
           <div>
-            <strong>Low identification confidence.</strong>{" "}
+            <strong>{isLowConfidence ? "Low identification confidence." : "Identification still uncertain."}</strong>{" "}
             {canAddMorePhotos
-              ? "Add another clear photo so we can compare more details."
-              : "We still can't confirm the species from photos. Please enter it manually below."}
+              ? isLowConfidence
+                ? "Add another clear photo so we can compare more details."
+                : "Add another angle or close-up to help confirm the match."
+              : isLowConfidence
+                ? "We still can't confirm the species from photos. Please enter it manually below."
+                : "We're close, but not fully confident yet. Continue reviewing matches or enter the species manually."}
           </div>
           {nextPhotoHint && <p className="muted-text">{nextPhotoHint}</p>}
           <div className="button-row">
