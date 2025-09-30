@@ -132,27 +132,8 @@ const AddPlantScreen = () => {
     }
   }, [candidates.length, currentStep, manualMode, replaceStep, selectedCandidate, selectedProfile]);
 
-  const lastConfirmedKeyRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!selectedProfile) {
-      lastConfirmedKeyRef.current = null;
-    }
-  }, [selectedProfile]);
-
-  useEffect(() => {
-    if (status?.kind === "policy-loading") {
-      lastConfirmedKeyRef.current = null;
-    }
-  }, [status]);
-
   useEffect(() => {
     if (!selectedCandidate || !selectedProfile) return;
-    const key = selectedCandidate.speciesKey;
-    if (lastConfirmedKeyRef.current === key) {
-      return;
-    }
-    lastConfirmedKeyRef.current = key;
     if (currentStep !== "confirm") {
       replaceStep("confirm");
     }

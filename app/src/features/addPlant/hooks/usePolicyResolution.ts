@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { buildPolicyRequest, getCacheHitStatus, getPolicyGenerationStatus, getPolicyReadyStatus } from "@app/features/addPlant/utils";
 import type { IdentificationCandidate } from "@services/id/types";
@@ -31,6 +31,9 @@ export interface UsePolicyResolutionResult {
   reset: () => void;
 }
 
+type ProfilesState = Record<string, SpeciesProfile>;
+type ProfilesUpdater = ProfilesState | ((current: ProfilesState) => ProfilesState);
+
 export const usePolicyResolution = ({
   resolvePolicy,
   onStatus,
@@ -39,13 +42,24 @@ export const usePolicyResolution = ({
   finishRun,
   isRunStale,
 }: UsePolicyResolutionOptions): UsePolicyResolutionResult => {
-  const [profiles, setProfiles] = useState<Record<string, SpeciesProfile>>({});
+  const [profiles, setProfiles] = useState<ProfilesState>({});
+  const profilesRef = useRef<ProfilesState>(profiles);
+  const updateProfiles = useCallback((updater: ProfilesUpdater) => {
+    setProfiles((previous) => {
+      const next =
+        typeof updater === "function"
+          ? (updater as (current: ProfilesState) => ProfilesState)(previous)
+          : updater;
+      profilesRef.current = next;
+      return next;
+    });
+  }, []);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
   const reset = useCallback(() => {
-    setProfiles({});
+    updateProfiles({});
     setSelectedKey(null);
-  }, []);
+  }, [updateProfiles]);
 
   const selectedProfile = useMemo(() => {
     if (!selectedKey) return null;
@@ -56,7 +70,7 @@ export const usePolicyResolution = ({
     async (candidate: IdentificationCandidate | null, options?: ResolvePolicyOptions) => {
       if (!candidate) return;
 
-      const cachedProfile = profiles[candidate.speciesKey];
+      const cachedProfile = profilesRef.current[candidate.speciesKey];
       if (cachedProfile && !options?.forceRefresh) {
         setSelectedKey(candidate.speciesKey);
         onStatus({ kind: "policy-cache", message: getCacheHitStatus() });
@@ -74,7 +88,7 @@ export const usePolicyResolution = ({
         if (isRunStale(token)) {
           return;
         }
-        setProfiles((prev) => ({ ...prev, [candidate.speciesKey]: profile }));
+        updateProfiles((prev) => ({ ...prev, [candidate.speciesKey]: profile }));
         setSelectedKey(candidate.speciesKey);
         onStatus({ kind: "policy-ready", message: getPolicyReadyStatus() });
       } catch (err) {
@@ -89,7 +103,7 @@ export const usePolicyResolution = ({
         finishRun(token);
       }
     },
-    [finishRun, isRunStale, onError, onStatus, profiles, resolvePolicy, startRun],
+    [finishRun, isRunStale, onError, onStatus, resolvePolicy, startRun, updateProfiles],
   );
 
   return {
