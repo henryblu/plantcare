@@ -332,6 +332,20 @@ p {
   color: var(--color-text-body);
 }
 
+.plant-card__environment-chip {
+  justify-self: flex-start;
+  font-size: 0.8rem;
+}
+
+.plant-card__personal-note {
+  background: rgba(126, 194, 148, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.75rem;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
 .plant-card__footer {
   display: flex;
   flex-wrap: wrap;
@@ -395,6 +409,47 @@ p {
   width: 100%;
   display: grid;
   gap: 1rem;
+}
+
+.form-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.form-field label {
+  font-weight: 600;
+}
+
+.form-field select,
+.form-field textarea,
+.form-field input[type="text"],
+.form-field input[type="search"] {
+  border: 1px solid rgba(61, 74, 69, 0.22);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.75rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.form-field textarea {
+  resize: vertical;
+  min-height: 6rem;
+}
+
+.form-field--checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.form-helper {
+  font-size: 0.8rem;
+}
+
+.form-error {
+  color: var(--color-accent-warm);
+  font-size: 0.85rem;
+  margin: 0;
 }
 
 .modal__actions {
@@ -463,6 +518,65 @@ p {
 
 .stepper__item--upcoming {
   opacity: 0.85;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: 0 20px 36px rgba(13, 26, 20, 0.3);
+  padding: 0.85rem 1.1rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  min-width: 280px;
+  max-width: min(90vw, 420px);
+  z-index: 40;
+}
+
+.toast__message {
+  flex: 1;
+  font-size: 0.95rem;
+}
+
+.toast__actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.toast__action {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.toast__action:hover,
+.toast__action:focus-visible {
+  background: rgba(126, 194, 148, 0.18);
+  outline: none;
+}
+
+.toast__dismiss {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-text-muted);
+}
+
+.toast__dismiss:hover,
+.toast__dismiss:focus-visible {
+  color: var(--color-text-body);
+  outline: none;
 }
 
 .stepper__marker {

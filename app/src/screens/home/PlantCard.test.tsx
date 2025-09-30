@@ -85,4 +85,53 @@ describe("PlantCard", () => {
       expect(handleDelete).toHaveBeenCalledWith(basePlant.id);
     });
   });
+
+  it("shows validation when nickname is cleared", async () => {
+    const handleRename = vi.fn().mockResolvedValue(undefined);
+
+    render(<PlantCard plant={basePlant} profile={baseProfile} onRename={handleRename} />, { legacyRoot: true });
+
+    const [card] = screen.getAllByRole("listitem", { name: basePlant.nickname ?? "" });
+    const utils = within(card);
+    fireEvent.click(utils.getByRole("button", { name: /plant actions/i }));
+    fireEvent.click(await utils.findByRole("menuitem", { name: /rename/i }));
+
+    const input = await utils.findByLabelText(/nickname/i);
+    fireEvent.change(input, { target: { value: "   " } });
+
+    fireEvent.submit(input.closest("form")!);
+
+    expect(handleRename).not.toHaveBeenCalled();
+    expect(await utils.findByText(/needs at least one character/i)).toBeTruthy();
+  });
+
+  it("submits edit details through the modal", async () => {
+    const handleEdit = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <PlantCard plant={basePlant} profile={baseProfile} onEdit={handleEdit} onRename={vi.fn()} />, 
+      { legacyRoot: true },
+    );
+
+    const [card] = screen.getAllByRole("listitem", { name: basePlant.nickname ?? "" });
+    const utils = within(card);
+    fireEvent.click(utils.getByRole("button", { name: /plant actions/i }));
+    fireEvent.click(await utils.findByRole("menuitem", { name: /edit details/i }));
+
+    const modal = await screen.findByRole("dialog", { name: /edit plant details/i });
+    const modalUtils = within(modal);
+    fireEvent.change(modalUtils.getByLabelText(/plant type/i), { target: { value: "outdoor" } });
+    const notesField = modalUtils.getByLabelText(/custom notes/i);
+    fireEvent.change(notesField, { target: { value: "Needs weekly mist" } });
+
+    fireEvent.click(modalUtils.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(handleEdit).toHaveBeenCalledWith(basePlant.id, {
+        environment: "outdoor",
+        notes: "Needs weekly mist",
+        forcePolicyRefresh: false,
+      });
+    });
+  });
 });

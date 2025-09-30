@@ -1,12 +1,18 @@
 import { MoisturePolicy, clampMoisturePolicy, isMoisturePolicy } from './moisturePolicy';
 import { SpeciesProfile, isSpeciesProfile } from './speciesProfile';
 
+export type PlantEnvironment = 'indoor' | 'outdoor' | 'unspecified';
+
+export const PLANT_ENVIRONMENTS: PlantEnvironment[] = ['indoor', 'outdoor', 'unspecified'];
+
 export interface Plant {
   id: string;
   speciesKey: string;
   nickname?: string;
   location?: string;
   photoUri?: string;
+  /** Where the plant primarily lives (used for tailoring guidance). */
+  environment?: PlantEnvironment;
   /** ISO timestamp when the plant record was created. */
   createdAt: string;
   /** ISO timestamp when the plant record was last updated. */
@@ -40,6 +46,11 @@ export function isPlant(value: unknown): value is Plant {
   if (candidate.location !== undefined && typeof candidate.location !== 'string') return false;
   if (candidate.photoUri !== undefined && typeof candidate.photoUri !== 'string') return false;
 
+  if (candidate.environment !== undefined) {
+    if (typeof candidate.environment !== 'string') return false;
+    if (!PLANT_ENVIRONMENTS.includes(candidate.environment as PlantEnvironment)) return false;
+  }
+
   if (!isIsoDate(candidate.createdAt)) return false;
   if (!isIsoDate(candidate.updatedAt)) return false;
   if (candidate.lastWateredAt !== undefined && !isIsoDate(candidate.lastWateredAt)) return false;
@@ -63,6 +74,12 @@ export function normalizePlant(plant: Plant): Plant {
     nickname: plant.nickname?.trim() || undefined,
     location: plant.location?.trim() || undefined,
     photoUri: plant.photoUri?.trim() || undefined,
+    environment:
+      typeof plant.environment === 'string'
+        ? (PLANT_ENVIRONMENTS.includes(plant.environment.trim().toLowerCase() as PlantEnvironment)
+            ? (plant.environment.trim().toLowerCase() as PlantEnvironment)
+            : undefined)
+        : undefined,
     notes: plant.notes?.trim() || undefined,
     createdAt: new Date(plant.createdAt).toISOString(),
     updatedAt: new Date(plant.updatedAt).toISOString(),

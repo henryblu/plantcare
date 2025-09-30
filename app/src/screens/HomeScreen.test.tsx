@@ -58,6 +58,7 @@ describe("HomeScreen", () => {
         status="ready"
         onRenamePlant={() => {}}
         onDeletePlant={() => {}}
+        onEditPlant={() => {}}
       />,
     );
 

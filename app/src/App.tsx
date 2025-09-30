@@ -30,6 +30,11 @@ import {
   isValidAddStep,
   type AddRouteStep,
 } from "./features/addPlant/constants";
+import {
+  usePlantActions,
+  type EditPlantDetailsInput,
+} from "./features/home/usePlantActions";
+import Toast from "./components/Toast";
 
 const bindFetch = (): typeof fetch => {
   if (typeof window !== "undefined" && typeof window.fetch === "function") {
@@ -59,6 +64,7 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
     plantNetConfigured,
     openAiConfigured,
     store,
+    resolvePolicy,
   } = usePlantCareServices();
   const { plants, speciesProfiles } = usePlantStoreSnapshot();
   const [uiConfig, setUiConfig] = useState<UiConfig>(initialConfig);
@@ -99,30 +105,48 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
     void reloadStore();
   }, [reloadStore]);
 
+  const {
+    renamePlant,
+    deletePlant,
+    undoDelete,
+    editPlantDetails,
+    undoState,
+    errorMessage,
+    clearError,
+  } = usePlantActions({
+    store,
+    resolvePolicy,
+    speciesProfiles,
+  });
+
   const handleRenamePlant = useCallback(
     async (id: string, nickname: string | null) => {
-      const existing = store.getPlant(id);
-      if (!existing) {
-        return;
-      }
-
-      const next = {
-        ...existing,
-        nickname: nickname ?? undefined,
-        updatedAt: new Date().toISOString(),
-      };
-
-      await store.upsertPlant(next);
+      await renamePlant(id, nickname);
     },
-    [store],
+    [renamePlant],
   );
 
   const handleDeletePlant = useCallback(
     async (id: string) => {
-      await store.removePlant(id);
+      await deletePlant(id);
     },
-    [store],
+    [deletePlant],
   );
+
+  const handleEditPlant = useCallback(
+    async (id: string, input: EditPlantDetailsInput) => {
+      await editPlantDetails(id, input);
+    },
+    [editPlantDetails],
+  );
+
+  const handleUndoDelete = useCallback(() => {
+    void undoDelete();
+  }, [undoDelete]);
+
+  const handleDismissError = useCallback(() => {
+    clearError();
+  }, [clearError]);
 
   const heroStatus = (
     <div className="hero-status">
@@ -182,6 +206,9 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
           onRetry={handleReload}
           onRenamePlant={handleRenamePlant}
           onDeletePlant={handleDeletePlant}
+          onEditPlant={handleEditPlant}
+          transientError={errorMessage}
+          onDismissTransientError={handleDismissError}
         />
       </div>
     );
@@ -190,6 +217,18 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
   return (
     <div className="app-shell">
       <main className="app-content">{content}</main>
+      {undoState && (
+        <Toast
+          message={`Removed ${
+            undoState.plant.nickname ||
+            undoState.plant.speciesProfile?.commonName ||
+            undoState.plant.speciesProfile?.canonicalName ||
+            undoState.plant.speciesKey
+          }.`}
+          actionLabel="Undo"
+          onAction={handleUndoDelete}
+        />
+      )}
       <TabNavigation />
     </div>
   );
