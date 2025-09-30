@@ -120,7 +120,7 @@ describe("PlantCard", () => {
 
     const modal = await screen.findByRole("dialog", { name: /edit plant details/i });
     const modalUtils = within(modal);
-    fireEvent.change(modalUtils.getByLabelText(/plant type/i), { target: { value: "outdoor" } });
+    fireEvent.change(modalUtils.getByLabelText(/placement/i), { target: { value: "unspecified" } });
     const notesField = modalUtils.getByLabelText(/custom notes/i);
     fireEvent.change(notesField, { target: { value: "Needs weekly mist" } });
 
@@ -128,7 +128,7 @@ describe("PlantCard", () => {
 
     await waitFor(() => {
       expect(handleEdit).toHaveBeenCalledWith(basePlant.id, {
-        environment: "outdoor",
+        environment: "unspecified",
         notes: "Needs weekly mist",
         forcePolicyRefresh: false,
       });

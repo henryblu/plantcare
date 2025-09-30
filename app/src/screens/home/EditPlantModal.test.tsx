@@ -47,7 +47,7 @@ describe("EditPlantModal", () => {
       { legacyRoot: true },
     );
 
-    fireEvent.change(screen.getByLabelText(/plant type/i), { target: { value: "outdoor" } });
+    fireEvent.change(screen.getByLabelText(/placement/i), { target: { value: "unspecified" } });
     const notesField = screen.getByLabelText(/custom notes/i);
     fireEvent.change(notesField, { target: { value: "  Keep evenly moist  " } });
 
@@ -58,10 +58,24 @@ describe("EditPlantModal", () => {
 
     await waitFor(() => {
       expect(handleSubmit).toHaveBeenCalledWith({
-        environment: "outdoor",
+        environment: "unspecified",
         notes: "Keep evenly moist",
         forcePolicyRefresh: false,
       });
     });
   });
+  it("shows legacy outdoor option when plant already tracked outdoors", () => {
+    const handleSubmit = vi.fn().mockResolvedValue(undefined);
+    const outdoorPlant: Plant = { ...basePlant, environment: "outdoor" };
+
+    render(
+      <EditPlantModal plant={outdoorPlant} onClose={() => {}} onSubmit={handleSubmit} errorMessage={null} />,
+      { legacyRoot: true },
+    );
+
+    const legacyOption = screen.getByRole("option", { name: /outdoor \(legacy\)/i });
+    expect(legacyOption).toBeDefined();
+    expect((screen.getByLabelText(/placement/i) as HTMLSelectElement).value).toBe("outdoor");
+  });
+
 });

@@ -81,6 +81,7 @@ describe("policySummary", () => {
 
   it("falls back to calendar dates for older entries", () => {
     const formatted = formatLastUpdated("2023-05-18T08:00:00.000Z");
-    expect(formatted).toMatch(/May 18/);
+    const expected = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date("2023-05-18T08:00:00.000Z"));
+    expect(formatted).toBe(expected);
   });
 });

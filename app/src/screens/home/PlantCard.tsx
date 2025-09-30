@@ -13,6 +13,7 @@ import type { SpeciesProfile } from "@core/models/speciesProfile";
 import { buildPlantPolicySummary, formatLastUpdated, selectPlantPolicy } from "./policySummary";
 import type { EditPlantDetailsInput } from "../../features/home/usePlantActions";
 import EditPlantModal from "./EditPlantModal";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 
 interface PlantCardProps {
   plant: Plant;
@@ -284,6 +285,11 @@ const PlantCard = forwardRef<HTMLElement, PlantCardProps>(function PlantCard(
 
         {isRenaming ? (
           <form className="plant-card__rename" onSubmit={handleRenameSubmit}>
+            <button type="button" className="icon-button plant-card__rename-close" aria-label="Cancel rename" onClick={handleRenameCancel}>
+              <svg viewBox="0 0 16 16" role="img" aria-hidden="true">
+                <path d="M4 4l8 8m0-8-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
             <label htmlFor={`rename-${plant.id}`} className="sr-only">
               Nickname
             </label>
@@ -350,13 +356,18 @@ const PlantCard = forwardRef<HTMLElement, PlantCardProps>(function PlantCard(
             aria-labelledby={confirmTitleId}
             aria-describedby={confirmDescId}
           >
+            <button type="button" className="icon-button modal__close" aria-label="Cancel delete" onClick={handleCancelDelete}>
+              <svg viewBox="0 0 16 16" role="img" aria-hidden="true">
+                <path d="M4 4l8 8m0-8-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
             <h3 id={confirmTitleId}>Remove this plant?</h3>
             <p id={confirmDescId}>
               This removes <strong>{primary}</strong> from your saved list. The species profile stays cached for next time.
             </p>
             <div className="modal__actions">
               <button type="button" className="tertiary-button" onClick={handleCancelDelete}>
-                Cancel
+                Cancel delete
               </button>
               <button type="button" className="danger-button" onClick={handleConfirmDelete}>
                 Delete plant

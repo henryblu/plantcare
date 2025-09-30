@@ -1,15 +1,23 @@
 import { FormEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import type { Plant, PlantEnvironment } from "@core/models/plant";
 import { PLANT_ENVIRONMENTS } from "@core/models/plant";
 import type { EditPlantDetailsInput } from "../../features/home/usePlantActions";
 
 const MAX_NOTE_LENGTH = 160;
 
-const ENVIRONMENT_OPTIONS: Array<{ value: PlantEnvironment | "unspecified"; label: string }> = [
-  { value: "unspecified", label: "Unspecified" },
-  { value: "indoor", label: "Indoor" },
-  { value: "outdoor", label: "Outdoor" },
+const BASE_ENVIRONMENT_OPTIONS: Array<{ value: PlantEnvironment | "unspecified"; label: string }> = [
+  { value: "indoor", label: "Indoor (default)" },
+  { value: "unspecified", label: "Not sure yet" },
 ];
+
+const buildEnvironmentOptions = (current: PlantEnvironment | "unspecified") => {
+  const options = [...BASE_ENVIRONMENT_OPTIONS];
+  if (current === "outdoor") {
+    options.push({ value: "outdoor", label: "Outdoor (legacy)" });
+  }
+  return options;
+};
 
 interface EditPlantModalProps {
   plant: Plant;
@@ -25,12 +33,14 @@ const EditPlantModal = ({ plant, onClose, onSubmit, errorMessage }: EditPlantMod
   const notesId = useId();
   const checkboxId = useId();
   const environmentRef = useRef<HTMLSelectElement | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
 
   const initialEnvironment = useMemo<PlantEnvironment | "unspecified">(() => {
-    if (!plant.environment) return "unspecified";
-    return PLANT_ENVIRONMENTS.includes(plant.environment) ? plant.environment : "unspecified";
+    if (!plant.environment) return "indoor";
+    return PLANT_ENVIRONMENTS.includes(plant.environment) ? plant.environment : "indoor";
   }, [plant.environment]);
 
+  const environmentOptions = useMemo(() => buildEnvironmentOptions(initialEnvironment), [initialEnvironment]);
   const [environment, setEnvironment] = useState<PlantEnvironment | "unspecified">(initialEnvironment);
   const [notes, setNotes] = useState(plant.notes ?? "");
   const [forcePolicyRefresh, setForcePolicyRefresh] = useState(false);
@@ -87,25 +97,31 @@ const EditPlantModal = ({ plant, onClose, onSubmit, errorMessage }: EditPlantMod
         aria-describedby={descriptionId}
         onSubmit={handleSubmit}
       >
+        <button type="button" className="icon-button modal__close" aria-label="Cancel edit" onClick={onClose}>
+          <svg viewBox="0 0 16 16" role="img" aria-hidden="true">
+            <path d="M4 4l8 8m0-8-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </button>
         <h3 id={titleId}>Edit plant details</h3>
         <p id={descriptionId} className="muted-text">
-          Update where this plant lives, jot personal notes, or force a fresh care policy.
+          Fine-tune indoor placement, jot personal notes, or force a fresh care policy.
         </p>
 
         <div className="form-field">
-          <label htmlFor={environmentId}>Plant type</label>
+          <label htmlFor={environmentId}>Placement</label>
           <select
             id={environmentId}
             ref={environmentRef}
             value={environment}
             onChange={(event) => setEnvironment(event.target.value as PlantEnvironment | "unspecified")}
           >
-            {ENVIRONMENT_OPTIONS.map((option) => (
+            {environmentOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
+          <div className="muted-text form-helper">This device is tuned for indoor plants; outdoor tracking is legacy-only.</div>
         </div>
 
         <div className="form-field">
@@ -142,7 +158,7 @@ const EditPlantModal = ({ plant, onClose, onSubmit, errorMessage }: EditPlantMod
 
         <div className="modal__actions">
           <button type="button" className="tertiary-button" onClick={onClose}>
-            Cancel
+            Cancel edit
           </button>
           <button type="submit" className="primary-button">
             Save changes

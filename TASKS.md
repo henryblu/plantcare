@@ -424,11 +424,11 @@
 
 ### Tickets (Phase 3 additions)
 
-* [ ] **Rename**: inline edit nickname; persist to PlantStore.
-* [ ] **Delete**: kebab → confirm modal → optimistic remove → undo.
-* [ ] **Edit details**: modal with type, notes, refresh policy; schema validation.
-* [ ] **Tests**: rename persistence, delete/undo, edit modal validation.
-* [ ] **A11y**: focus trapping in modals; labels for form fields.
+* [x] **Rename**: inline edit nickname; persist to PlantStore.
+* [x] **Delete**: kebab → confirm modal → optimistic remove → undo.
+* [x] **Edit details**: modal with type, notes, refresh policy; schema validation.
+* [x] **Tests**: rename persistence, delete/undo, edit modal validation.
+* [x] **A11y**: focus trapping in modals; labels for form fields.
 
 
 ---
@@ -514,7 +514,7 @@
 * [x] 0 Stabilize web flow (validation, errors)
 * [x] 1 Confidence heuristic + multi-photo loop
 * [x] 2 Local cache + schema enforcement
-* [ ] 3 Tabs + tidy UI
+* [x] 3 Tabs + tidy UI
 * [ ] 4 Service boundaries (portable)
 * [ ] 5 Safe demo mode (rate limits, keys)
 * [ ] 6 (Deferred) RN shell
