@@ -348,6 +348,89 @@
 * A11y pass: axe checks, focus order, alt text; Lighthouse ≥95 on Home & Add.
 * Migrations/Sanitizers: ensure older data loads; default nickname/type; sanitize strings.
 
+
+
+### Epic I — Modify Saved Plants
+
+#### I.1 Inline Rename
+
+**User story:** As a user, I can rename my saved plants to something meaningful (e.g., “Kitchen Basil” instead of *Ocimum basilicum*).
+
+**Tasks**
+
+* Editable field in PlantCard nickname (double-click / tap “Rename”).
+* Persist nickname to PlantStore.
+* Show inline validation (no empty string, trim).
+* Optimistic update; rollback on error.
+
+**DoD**
+
+* Rename works without page reload.
+* New nickname persists across sessions.
+* Accessible: input labelled, focus returns correctly.
+
+---
+
+#### I.2 Delete Plant
+
+**User story:** As a user, I can delete a plant I no longer want tracked.
+
+**Tasks**
+
+* Delete action in PlantCard kebab menu.
+* Confirm modal (“Are you sure?”).
+* Optimistic removal from list; undo via toast.
+* Persist deletion in PlantStore.
+
+**DoD**
+
+* Deleted plants no longer appear on Home.
+* Undo restores record if action taken.
+* Errors surface as non-blocking banner.
+
+---
+
+#### I.3 Edit Plant Details
+
+**User story:** As a user, I can adjust saved plant details if the defaults don’t match my needs.
+
+**Scope for MVP**
+
+* Change **type** (e.g., indoor/outdoor).
+* Toggle **policy refresh** (force re-fetch from ChatGPT).
+* Add / edit **notes** (custom care reminders).
+
+**Tasks**
+
+* “Edit” action in PlantCard kebab → opens modal with editable fields.
+* Persist changes in PlantStore; refresh cached species if forced.
+* Schema validation runs before saving.
+
+**DoD**
+
+* Editing flows don’t break schema; invalid input clamped or rejected with message.
+* All changes visible immediately on Home.
+* Undo/rollback supported for destructive actions (delete, force refresh).
+
+---
+
+### Implementation Order (Phase 3 additions)
+
+1. Inline rename (smallest, most requested).
+2. Delete plant (safe remove).
+3. Edit details (type, notes, refresh).
+
+---
+
+### Tickets (Phase 3 additions)
+
+* [ ] **Rename**: inline edit nickname; persist to PlantStore.
+* [ ] **Delete**: kebab → confirm modal → optimistic remove → undo.
+* [ ] **Edit details**: modal with type, notes, refresh policy; schema validation.
+* [ ] **Tests**: rename persistence, delete/undo, edit modal validation.
+* [ ] **A11y**: focus trapping in modals; labels for form fields.
+
+
 ---
 
 ## Phase 4 - Service boundaries (prep for mobile later)
