@@ -409,6 +409,119 @@ p {
   font-weight: 700;
 }
 
+.card--stepper {
+  gap: 1.25rem;
+}
+
+.stepper-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.stepper-controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.stepper {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.stepper__item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(61, 74, 69, 0.18);
+  background: rgba(255, 255, 255, 0.7);
+  min-height: 72px;
+}
+
+.stepper__item--current {
+  border-color: rgba(126, 194, 148, 0.8);
+  background: rgba(126, 194, 148, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(126, 194, 148, 0.35);
+}
+
+.stepper__item--complete {
+  border-color: rgba(66, 103, 78, 0.4);
+  background: rgba(66, 103, 78, 0.16);
+  color: var(--color-primary-dark);
+}
+
+.stepper__item--upcoming {
+  opacity: 0.85;
+}
+
+.stepper__marker {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  border: 2px solid var(--color-primary-mid);
+  color: var(--color-primary-mid);
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.stepper__item--current .stepper__marker {
+  background: var(--color-primary-mid);
+  color: #ffffff;
+}
+
+.stepper__item--complete .stepper__marker {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+  color: #ffffff;
+}
+
+.stepper__marker-check {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.stepper__body {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.stepper__title {
+  font-weight: 600;
+  color: var(--color-text-strong);
+}
+
+.stepper__item--complete .stepper__title {
+  color: var(--color-primary-dark);
+}
+
+.stepper__description {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.stepper__item--current .stepper__description {
+  color: var(--color-text-body);
+}
+
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .card--form {
   gap: 1.5rem;
 }

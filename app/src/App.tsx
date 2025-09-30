@@ -24,6 +24,12 @@ import HomeScreen from "./screens/HomeScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import TabNavigation from "./components/TabNavigation";
 import { useNavigation } from "./navigation/router";
+import {
+  ADD_ROUTE_STEPS,
+  DEFAULT_ADD_STEP,
+  isValidAddStep,
+  type AddRouteStep,
+} from "./features/addPlant/constants";
 
 const bindFetch = (): typeof fetch => {
   if (typeof window !== "undefined" && typeof window.fetch === "function") {
@@ -38,14 +44,6 @@ type UiConfig = {
   plantNetApiKey: string;
   openAiApiKey: string;
 };
-
-type AddRouteStep = "photo" | "candidates" | "confirm";
-
-const ADD_ROUTE_STEPS: AddRouteStep[] = ["photo", "candidates", "confirm"];
-const DEFAULT_ADD_STEP: AddRouteStep = "photo";
-
-const isValidAddStep = (value: string | null): value is AddRouteStep =>
-  Boolean(value && ADD_ROUTE_STEPS.includes(value as AddRouteStep));
 
 type AppShellProps = {
   initialConfig: UiConfig;
