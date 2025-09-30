@@ -67,4 +67,39 @@ describe("PlantNetClient", () => {
       }),
     ).rejects.toMatchObject({ code: "API_ERROR" });
   });
+
+  it("duplicates organs so each uploaded image has a matching entry", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ results: [] }),
+    });
+
+    const client = new PlantNetClient({
+      fetchFn: fetchMock,
+      defaultOrgans: ["leaf"],
+    });
+
+    await client.identify({
+      images: [
+        {
+          data: validImage,
+          contentType: "image/jpeg",
+          filename: "photo-1.jpg",
+        },
+        {
+          data: validImage,
+          contentType: "image/jpeg",
+          filename: "photo-2.jpg",
+        },
+      ],
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [, init] = fetchMock.mock.calls[0];
+    const formData = init?.body as FormData;
+    expect(formData).toBeInstanceOf(FormData);
+    const organs = (formData as FormData).getAll("organs");
+    expect(organs).toEqual(["leaf", "leaf"]);
+  });
 });

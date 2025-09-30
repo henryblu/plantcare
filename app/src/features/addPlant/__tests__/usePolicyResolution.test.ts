@@ -132,4 +132,35 @@ describe("usePolicyResolution", () => {
     expect(result.current.selectedKey).toBeNull();
     expect(result.current.selectedProfile).toBeNull();
   });
+
+  it("regenerates policies after a reset even for the same candidate", async () => {
+    const resolvePolicy = vi.fn(async () => profile);
+    const onStatus = vi.fn();
+    const onError = vi.fn();
+    const tracker = createAsyncTracker();
+
+    const { result } = renderHook(() =>
+      usePolicyResolution({
+        resolvePolicy,
+        onStatus,
+        onError,
+        ...tracker,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.runPolicyForCandidate(candidate);
+    });
+
+    act(() => {
+      result.current.reset();
+    });
+
+    await act(async () => {
+      await result.current.runPolicyForCandidate(candidate);
+    });
+
+    expect(resolvePolicy).toHaveBeenCalledTimes(2);
+    expect(result.current.selectedProfile).toEqual(profile);
+  });
 });

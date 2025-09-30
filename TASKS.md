@@ -190,9 +190,9 @@
 
 **Tasks**
 
-* Extract a reusable Stepper with: `currentStep`, `next`, `back`, `canNext`.
-* Persist step data in memory; mirror step in URL (`?step=`).
-* Reuse confidence meter and microcopy from Phase 1.
+* [x] Extract a reusable Stepper with: `currentStep`, `next`, `back`, `canNext`.
+* [x] Persist step data in memory; mirror step in URL (`?step=`).
+* [x] Reuse confidence meter and microcopy from Phase 1.
 
 **Guardrails**
 
@@ -201,9 +201,9 @@
 
 **Definition of Done**
 
-* Cancel from any step prompts confirmation and safely exits without orphan data.
-* Saving creates a valid Plant record that appears on Home immediately.
-* Re-adding same species respects cache (no extra ChatGPT call).
+* [x] Cancel from any step prompts confirmation and safely exits without orphan data.
+* [x] Saving creates a valid Plant record that appears on Home immediately.
+* [x] Re-adding same species respects cache (no extra ChatGPT call).
 
 ### Epic D — Settings
 
