@@ -297,7 +297,12 @@ export class PlantNetClient {
     }));
 
     const formData = new FormData();
-    const organs = request.organs ?? this.options.defaultOrgans ?? ["leaf"];
+    const sourceOrgans = request.organs ?? this.options.defaultOrgans ?? [];
+    const fallbackOrgan =
+      sourceOrgans.length > 0 ? sourceOrgans[sourceOrgans.length - 1] : "leaf";
+    const organs = Array.from({ length: validatedInputs.length }, (_, index) =>
+      sourceOrgans[index] ?? fallbackOrgan,
+    );
     organs.forEach((organ) => formData.append("organs", organ));
 
     const blobs = await Promise.all(
