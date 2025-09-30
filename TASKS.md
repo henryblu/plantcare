@@ -209,23 +209,19 @@
 
 #### D.1 Feature Toggles & Maintenance
 
-**User story:** I can toggle mock/live, manage local data, and see version info.
+**User story:** I can manage local data, and see version info.
 
 **Tasks**
 
-* Toggles:
-  * `USE_MOCK_PLANTNET`, `USE_MOCK_CHATGPT` (persisted).
 * Maintenance:
   * Clear species/plant cache (separately and combined).
   * View local storage usage (approximate).
-* Keys:
-  * Inputs for PlantNet/OpenAI keys (dev only); mask values; “Test connection” action (pings proxy/endpoint without sending images).
 * About:
   * App/version, build mode, links to README/help.
 
 **Definition of Done**
 
-* Toggling mocks takes effect on next operation (no hard reload required).
+* Togglings takes effect on next operation (no hard reload required).
 * Clearing data shows confirmation and resets Home appropriately.
 
 ### Epic E — Visual System & Tidy UI
