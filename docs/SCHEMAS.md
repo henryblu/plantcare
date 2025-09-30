@@ -180,6 +180,11 @@
       "type": "string",
       "minLength": 1
     },
+    "environment": {
+      "type": "string",
+      "enum": ["indoor", "outdoor", "unspecified"],
+      "description": "Where the plant primarily lives (guides tone of reminders)."
+    },
     "createdAt": {
       "type": "string",
       "format": "date-time"

@@ -11,12 +11,16 @@ import {
 import type { Plant } from "@core/models/plant";
 import type { SpeciesProfile } from "@core/models/speciesProfile";
 import { buildPlantPolicySummary, formatLastUpdated, selectPlantPolicy } from "./policySummary";
+import type { EditPlantDetailsInput } from "../../features/home/usePlantActions";
+import EditPlantModal from "./EditPlantModal";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 
 interface PlantCardProps {
   plant: Plant;
   profile?: SpeciesProfile;
   onRename?: (id: string, nickname: string | null) => void | Promise<void>;
   onDelete?: (id: string) => void | Promise<void>;
+  onEdit?: (id: string, input: EditPlantDetailsInput) => void | Promise<void>;
 }
 
 const resolveDisplayNames = (plant: Plant, profile?: SpeciesProfile) => {
@@ -27,7 +31,7 @@ const resolveDisplayNames = (plant: Plant, profile?: SpeciesProfile) => {
 };
 
 const PlantCard = forwardRef<HTMLElement, PlantCardProps>(function PlantCard(
-  { plant, profile, onRename, onDelete }: PlantCardProps,
+  { plant, profile, onRename, onDelete, onEdit }: PlantCardProps,
   forwardedRef,
 ) {
   const menuButtonId = useId();
@@ -40,9 +44,13 @@ const PlantCard = forwardRef<HTMLElement, PlantCardProps>(function PlantCard(
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [nickname, setNickname] = useState(plant.nickname ?? "");
+  const [renameError, setRenameError] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
 
   useEffect(() => {
     setNickname(plant.nickname ?? "");
+    setRenameError(null);
   }, [plant.nickname]);
 
   useEffect(() => {
@@ -79,25 +87,38 @@ const PlantCard = forwardRef<HTMLElement, PlantCardProps>(function PlantCard(
 
   const handleStartRename = useCallback(() => {
     setMenuOpen(false);
+    setRenameError(null);
     setIsRenaming(true);
   }, []);
 
   const handleRenameSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
+      const trimmed = nickname.trim();
+      if (trimmed.length === 0) {
+        setRenameError("Nickname needs at least one character.");
+        renameInputRef.current?.focus();
+        return;
+      }
       if (!onRename) {
         setIsRenaming(false);
         return;
       }
-      const trimmed = nickname.trim();
-      await onRename(plant.id, trimmed.length ? trimmed : null);
-      setIsRenaming(false);
+      try {
+        await onRename(plant.id, trimmed);
+        setIsRenaming(false);
+        setRenameError(null);
+      } catch (error) {
+        setRenameError((error as Error).message ?? "We couldn't rename this plant. Try again.");
+        renameInputRef.current?.focus();
+      }
     },
     [nickname, onRename, plant.id],
   );
 
   const handleRenameCancel = useCallback(() => {
     setNickname(plant.nickname ?? "");
+    setRenameError(null);
     setIsRenaming(false);
   }, [plant.nickname]);
 
@@ -116,6 +137,33 @@ const PlantCard = forwardRef<HTMLElement, PlantCardProps>(function PlantCard(
   const handleCancelDelete = useCallback(() => {
     setConfirmOpen(false);
   }, []);
+
+  const handleStartEdit = useCallback(() => {
+    setMenuOpen(false);
+    setEditError(null);
+    setEditOpen(true);
+  }, []);
+
+  const handleEditClose = useCallback(() => {
+    setEditOpen(false);
+  }, []);
+
+  const handleEditSubmit = useCallback(
+    async (input: EditPlantDetailsInput) => {
+      if (!onEdit) {
+        setEditOpen(false);
+        return;
+      }
+      try {
+        await onEdit(plant.id, input);
+        setEditOpen(false);
+        setEditError(null);
+      } catch (error) {
+        setEditError((error as Error).message ?? "We couldn't save those changes. Try again.");
+      }
+    },
+    [onEdit, plant.id],
+  );
 
   useEffect(() => {
     if (!confirmOpen) return;
@@ -144,6 +192,13 @@ const PlantCard = forwardRef<HTMLElement, PlantCardProps>(function PlantCard(
   );
 
   const photoAlt = plant.photoUri ? `${primary} plant photo` : `${primary} placeholder image`;
+
+  const environmentLabel = useMemo(() => {
+    if (!plant.environment || plant.environment === "unspecified") {
+      return null;
+    }
+    return plant.environment === "indoor" ? "Indoor" : "Outdoor";
+  }, [plant.environment]);
 
   return (
     <article
@@ -210,6 +265,14 @@ const PlantCard = forwardRef<HTMLElement, PlantCardProps>(function PlantCard(
                 <button
                   type="button"
                   role="menuitem"
+                  className="plant-card__menu-item"
+                  onClick={handleStartEdit}
+                >
+                  Edit details
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
                   className="plant-card__menu-item plant-card__menu-item--danger"
                   onClick={handleDeleteRequest}
                 >
@@ -222,6 +285,11 @@ const PlantCard = forwardRef<HTMLElement, PlantCardProps>(function PlantCard(
 
         {isRenaming ? (
           <form className="plant-card__rename" onSubmit={handleRenameSubmit}>
+            <button type="button" className="icon-button plant-card__rename-close" aria-label="Cancel rename" onClick={handleRenameCancel}>
+              <svg viewBox="0 0 16 16" role="img" aria-hidden="true">
+                <path d="M4 4l8 8m0-8-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
             <label htmlFor={`rename-${plant.id}`} className="sr-only">
               Nickname
             </label>
@@ -231,7 +299,13 @@ const PlantCard = forwardRef<HTMLElement, PlantCardProps>(function PlantCard(
               value={nickname}
               onChange={(event) => setNickname(event.target.value)}
               placeholder="Give this plant a nickname"
+              aria-invalid={renameError ? "true" : undefined}
             />
+            {renameError && (
+              <p className="form-error" role="alert">
+                {renameError}
+              </p>
+            )}
             <div className="plant-card__rename-actions">
               <button type="submit" className="primary-button primary-button--compact">
                 Save
@@ -248,12 +322,21 @@ const PlantCard = forwardRef<HTMLElement, PlantCardProps>(function PlantCard(
             ) : (
               <p className="muted-text">Policy unavailable. Generate a new guide from the Add Plant flow.</p>
             )}
+            {environmentLabel && (
+              <span className="chip chip--outline plant-card__environment-chip">{environmentLabel}</span>
+            )}
             {policy?.notes && policy.notes.length > 0 && (
               <ul className="plant-card__notes">
                 {policy.notes.map((note, index) => (
                   <li key={index}>{note}</li>
                 ))}
               </ul>
+            )}
+            {plant.notes && (
+              <div className="plant-card__personal-note">
+                <strong>Your note</strong>
+                <p>{plant.notes}</p>
+              </div>
             )}
           </section>
         )}
@@ -273,13 +356,18 @@ const PlantCard = forwardRef<HTMLElement, PlantCardProps>(function PlantCard(
             aria-labelledby={confirmTitleId}
             aria-describedby={confirmDescId}
           >
+            <button type="button" className="icon-button modal__close" aria-label="Cancel delete" onClick={handleCancelDelete}>
+              <svg viewBox="0 0 16 16" role="img" aria-hidden="true">
+                <path d="M4 4l8 8m0-8-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
             <h3 id={confirmTitleId}>Remove this plant?</h3>
             <p id={confirmDescId}>
               This removes <strong>{primary}</strong> from your saved list. The species profile stays cached for next time.
             </p>
             <div className="modal__actions">
               <button type="button" className="tertiary-button" onClick={handleCancelDelete}>
-                Cancel
+                Cancel delete
               </button>
               <button type="button" className="danger-button" onClick={handleConfirmDelete}>
                 Delete plant
@@ -287,6 +375,14 @@ const PlantCard = forwardRef<HTMLElement, PlantCardProps>(function PlantCard(
             </div>
           </div>
         </div>
+      )}
+      {editOpen && (
+        <EditPlantModal
+          plant={plant}
+          onClose={handleEditClose}
+          onSubmit={handleEditSubmit}
+          errorMessage={editError}
+        />
       )}
     </article>
   );

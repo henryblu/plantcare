@@ -263,7 +263,7 @@ p {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--color-text-body);
+  color: var(--color-neutral-dark);
   transition: background 0.2s ease, color 0.2s ease;
 }
 
@@ -276,12 +276,6 @@ p {
 .icon-button:focus-visible {
   outline: 2px solid var(--color-secondary-mid);
   outline-offset: 2px;
-}
-
-.icon-button svg {
-  width: 1.25rem;
-  height: 1.25rem;
-  fill: currentColor;
 }
 
 .plant-card__menu {
@@ -360,26 +354,8 @@ p {
 }
 
 .plant-card__rename {
-  position: relative;
   display: grid;
   gap: 0.75rem;
-  padding: 1rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid rgba(61, 74, 69, 0.18);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: var(--shadow-card-soft);
-}
-
-.plant-card__rename-close {
-  position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
-  color: var(--color-text-muted);
-}
-
-.plant-card__rename-close:hover,
-.plant-card__rename-close:focus-visible {
-  color: var(--color-text-strong);
 }
 
 .plant-card__rename-actions {
@@ -425,7 +401,6 @@ p {
 }
 
 .modal {
-  position: relative;
   background: var(--color-surface);
   border-radius: var(--radius-md);
   box-shadow: 0 28px 50px rgba(13, 26, 20, 0.32);
@@ -475,18 +450,6 @@ p {
   color: var(--color-accent-warm);
   font-size: 0.85rem;
   margin: 0;
-}
-
-.modal__close {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  color: var(--color-text-muted);
-}
-
-.modal__close:hover,
-.modal__close:focus-visible {
-  color: var(--color-text-strong);
 }
 
 .modal__actions {

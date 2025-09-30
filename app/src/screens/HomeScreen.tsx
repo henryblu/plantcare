@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Plant } from "@core/models/plant";
 import type { SpeciesProfile } from "@core/models/speciesProfile";
 import PlantCard from "./home/PlantCard";
+import type { EditPlantDetailsInput } from "../features/home/usePlantActions";
 
 type HomeStatus = "loading" | "error" | "ready";
 
@@ -14,6 +15,9 @@ interface HomeScreenProps {
   onRetry?: () => void;
   onRenamePlant?: (id: string, nickname: string | null) => void | Promise<void>;
   onDeletePlant?: (id: string) => void | Promise<void>;
+  onEditPlant?: (id: string, input: EditPlantDetailsInput) => void | Promise<void>;
+  transientError?: string | null;
+  onDismissTransientError?: () => void;
 }
 
 const EmptyState = ({ onAddPlant, actionsDisabled }: Pick<HomeScreenProps, "onAddPlant"> & { actionsDisabled: boolean }) => (
@@ -91,6 +95,9 @@ const HomeScreen = ({
   onRetry,
   onRenamePlant,
   onDeletePlant,
+  onEditPlant,
+  transientError,
+  onDismissTransientError,
 }: HomeScreenProps) => {
   const listRef = useRef<HTMLDivElement | null>(null);
   const isBrowser = typeof window !== "undefined";
@@ -238,6 +245,18 @@ const HomeScreen = ({
           )}
         </div>
       )}
+      {transientError && (
+        <div className="error-banner error-banner--inline" role="status">
+          <div className="error-banner__message">{transientError}</div>
+          {onDismissTransientError && (
+            <div className="error-banner__actions">
+              <button type="button" className="tertiary-button" onClick={onDismissTransientError}>
+                Dismiss
+              </button>
+            </div>
+          )}
+        </div>
+      )}
       <div className="list plant-list" ref={shouldVirtualize ? listRef : null} role="list">
         {shouldVirtualize ? (
           <div className="plant-list__virtual-outer" style={{ height: totalHeight }} role="presentation">
@@ -255,6 +274,7 @@ const HomeScreen = ({
                     profile={profile}
                     onRename={onRenamePlant}
                     onDelete={onDeletePlant}
+                    onEdit={onEditPlant}
                     ref={index === 0 ? handleItemMeasure : undefined}
                   />
                 );
@@ -271,6 +291,7 @@ const HomeScreen = ({
                 profile={profile}
                 onRename={onRenamePlant}
                 onDelete={onDeletePlant}
+                onEdit={onEditPlant}
               />
             );
           })
