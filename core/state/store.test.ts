@@ -37,6 +37,17 @@ const toCacheEntry = (profile: SpeciesProfile, overrides: Partial<CachedSpeciesE
   ...overrides,
 });
 
+const createPlant = (overrides: Partial<Record<string, unknown>> = {}) => ({
+  id: 'plant-1',
+  speciesKey: 'ficus-lyrata',
+  nickname: 'Fiddle',
+  createdAt: new Date('2024-06-01T00:00:00.000Z').toISOString(),
+  updatedAt: new Date('2024-06-01T00:00:00.000Z').toISOString(),
+  lastWateredAt: new Date('2024-05-28T00:00:00.000Z').toISOString(),
+  environment: 'indoor',
+  ...overrides,
+});
+
 describe('PlantStore storage hydration', () => {
   beforeEach(() => {
     vi.spyOn(console, 'info').mockImplementation(() => undefined);
@@ -218,5 +229,79 @@ describe('PlantStore legacy plant migration', () => {
     expect(payload.schemaVersion).toBe(PLANTS_SCHEMA_VERSION);
     expect(payload.plants).toHaveLength(1);
     expect((payload.plants[0] as { id: string }).id).toBe('plant-1');
+  });
+});
+
+describe('PlantStore maintenance actions', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('clears only persisted plant records', async () => {
+    const storage = createMemoryStorage();
+    const store = new PlantStore(storage);
+    await store.hydrate();
+
+    const profile = createProfile();
+    await store.upsertSpeciesProfile(profile);
+    await store.upsertPlant(createPlant());
+
+    await store.clearPlants();
+
+    const state = store.getState();
+    expect(state.plants).toHaveLength(0);
+    expect(Object.keys(state.speciesCache)).toHaveLength(1);
+
+    const snapshot = storage.snapshot();
+    expect(snapshot['smartplant:plants']).toBeUndefined();
+    expect(snapshot['smartplant:species-cache']).toBeDefined();
+  });
+
+  it('clears only species cache entries', async () => {
+    const storage = createMemoryStorage();
+    const store = new PlantStore(storage);
+    await store.hydrate();
+
+    const profile = createProfile();
+    await store.upsertSpeciesProfile(profile);
+    await store.upsertPlant(createPlant());
+
+    await store.clearSpeciesCache();
+
+    const state = store.getState();
+    expect(state.plants).toHaveLength(1);
+    expect(Object.keys(state.speciesCache)).toHaveLength(0);
+
+    const snapshot = storage.snapshot();
+    expect(snapshot['smartplant:species-cache']).toBeUndefined();
+    expect(snapshot['smartplant:plants']).toBeDefined();
+  });
+
+  it('estimates storage footprint after maintenance operations', async () => {
+    const storage = createMemoryStorage();
+    const store = new PlantStore(storage);
+    await store.hydrate();
+
+    const profile = createProfile();
+    await store.upsertSpeciesProfile(profile);
+    await store.upsertPlant(createPlant({ id: 'plant-2', speciesKey: profile.speciesKey }));
+
+    const populated = store.getStorageFootprint();
+    expect(populated.totalBytes).toBeGreaterThan(0);
+    expect(populated.totalBytes).toBe(populated.plantsBytes + populated.speciesBytes);
+
+    await store.clearSpeciesCache();
+    const afterSpeciesClear = store.getStorageFootprint();
+    expect(afterSpeciesClear.speciesBytes).toBeLessThan(populated.speciesBytes);
+
+    await store.clearPlants();
+    const afterPlantsClear = store.getStorageFootprint();
+    expect(afterPlantsClear.plantsBytes).toBeLessThan(afterSpeciesClear.plantsBytes);
+    expect(afterPlantsClear.totalBytes).toBe(afterPlantsClear.plantsBytes + afterPlantsClear.speciesBytes);
   });
 });
