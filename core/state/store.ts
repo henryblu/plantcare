@@ -57,6 +57,12 @@ export interface CachedSpeciesEntry {
   source: SpeciesProfile['source'];
 }
 
+export interface StorageFootprint {
+  plantsBytes: number;
+  speciesBytes: number;
+  totalBytes: number;
+}
+
 export interface SpeciesCacheMetadata {
   ttlDays?: number;
   refreshedAt?: string | Date;
@@ -87,6 +93,16 @@ const clonePlant = (plant: Plant): Plant => ({
     : undefined,
   speciesProfile: plant.speciesProfile ? cloneSpeciesProfile(plant.speciesProfile) : undefined,
 });
+
+const encodeLength = (input: string): number => {
+  if (typeof TextEncoder !== 'undefined') {
+    return new TextEncoder().encode(input).length;
+  }
+  if (typeof Buffer !== 'undefined') {
+    return Buffer.from(input, 'utf8').length;
+  }
+  return input.length;
+};
 
 const sanitizePlantArray = (input: unknown[]): { plants: Plant[]; invalidCount: number } => {
   const normalized: Plant[] = [];
@@ -452,26 +468,59 @@ export class PlantStore {
     this.notifyListeners();
   }
 
+  async clearPlants(): Promise<void> {
+    if (this.state.plants.length > 0) {
+      this.state = { ...this.state, plants: [] };
+      this.invalidateSnapshot();
+      await this.storage.removeItem(this.keys.plants);
+      this.notifyListeners();
+      return;
+    }
+    await this.storage.removeItem(this.keys.plants);
+  }
+
+  async clearSpeciesCache(): Promise<void> {
+    if (Object.keys(this.state.speciesCache).length > 0) {
+      this.state = { ...this.state, speciesCache: {} };
+      this.invalidateSnapshot();
+      await this.storage.removeItem(this.keys.speciesCache);
+      this.notifyListeners();
+      return;
+    }
+    await this.storage.removeItem(this.keys.speciesCache);
+  }
+
+  getStorageFootprint(): StorageFootprint {
+    const plantsPayload = this.createPersistedPlantsPayload();
+    const speciesPayload = this.createPersistedSpeciesPayload();
+    const plantsBytes = encodeLength(JSON.stringify(plantsPayload));
+    const speciesBytes = encodeLength(JSON.stringify(speciesPayload));
+    return {
+      plantsBytes,
+      speciesBytes,
+      totalBytes: plantsBytes + speciesBytes,
+    };
+  }
+
   private withSpecies(plant: Plant): Plant {
     const cached = this.state.speciesCache[plant.speciesKey];
     return cached ? { ...plant, speciesProfile: cached.profile } : plant;
   }
 
-  private async persistPlants(): Promise<void> {
+  private createPersistedPlantsPayload(): PersistedPlantsPayload {
     const plants = this.state.plants.map(({ speciesProfile, ...rest }) => ({
       ...rest,
       moisturePolicyOverride: rest.moisturePolicyOverride
         ? cloneMoisturePolicy(rest.moisturePolicyOverride)
         : undefined,
     }));
-    const payload: PersistedPlantsPayload = {
+    return {
       schemaVersion: PLANTS_SCHEMA_VERSION,
       plants,
     };
-    await this.storage.setItem(this.keys.plants, payload);
   }
 
-  private async persistSpeciesCache(): Promise<void> {
+  private createPersistedSpeciesPayload(): PersistedSpeciesCachePayload {
     const entries = Object.fromEntries(
       Object.entries(this.state.speciesCache).map(([key, entry]) => [
         key,
@@ -483,10 +532,19 @@ export class PlantStore {
         },
       ]),
     );
-    const payload: PersistedSpeciesCachePayload = {
+    return {
       schemaVersion: SPECIES_CACHE_SCHEMA_VERSION,
       entries,
     };
+  }
+
+  private async persistPlants(): Promise<void> {
+    const payload = this.createPersistedPlantsPayload();
+    await this.storage.setItem(this.keys.plants, payload);
+  }
+
+  private async persistSpeciesCache(): Promise<void> {
+    const payload = this.createPersistedSpeciesPayload();
     await this.storage.setItem(this.keys.speciesCache, payload);
   }
 

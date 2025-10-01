@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getRuntimeServicesConfig } from "@config/environment";
 import { USE_MOCK_PLANTNET, USE_MOCK_CHATGPT } from "@config/featureFlags";
+import { getAppInfo } from "@config/appInfo";
 import {
   createIdentificationProvider,
   type IdentificationProvider,
@@ -61,10 +62,13 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
     hydrateError,
     reloadStore,
     clearStore,
+    clearPlants,
+    clearSpeciesCache,
     plantNetConfigured,
     openAiConfigured,
     store,
     resolvePolicy,
+    getStorageFootprint,
   } = usePlantCareServices();
   const { plants, speciesProfiles } = usePlantStoreSnapshot();
   const [uiConfig, setUiConfig] = useState<UiConfig>(initialConfig);
@@ -97,9 +101,17 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
     setUiConfig(next);
   }, []);
 
-  const handleClearData = useCallback(async () => {
+  const handleClearAll = useCallback(async () => {
     await clearStore();
   }, [clearStore]);
+
+  const handleClearPlants = useCallback(async () => {
+    await clearPlants();
+  }, [clearPlants]);
+
+  const handleClearSpecies = useCallback(async () => {
+    await clearSpeciesCache();
+  }, [clearSpeciesCache]);
 
   const handleReload = useCallback(() => {
     void reloadStore();
@@ -159,6 +171,9 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
     </div>
   );
 
+  const storageFootprint = useMemo(() => getStorageFootprint(), [getStorageFootprint, plants, speciesProfiles]);
+  const appInfo = useMemo(getAppInfo, []);
+
   let content: JSX.Element;
 
   if (location.route === "settings") {
@@ -171,7 +186,15 @@ const AppShell = ({ initialConfig }: AppShellProps) => {
           </div>
           {heroStatus}
         </section>
-        <SettingsScreen config={uiConfig} onChange={handleConfigChange} onClearData={handleClearData} />
+        <SettingsScreen
+          config={uiConfig}
+          onChange={handleConfigChange}
+          onClearAll={handleClearAll}
+          onClearPlants={handleClearPlants}
+          onClearSpecies={handleClearSpecies}
+          storageFootprint={storageFootprint}
+          appInfo={appInfo}
+        />
       </div>
     );
   } else if (location.route === "add") {

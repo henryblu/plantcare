@@ -9,7 +9,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { PlantStore, type StoreState } from "@core/state/store";
+import { PlantStore, type StorageFootprint, type StoreState } from "@core/state/store";
 import {
   createPlantFlow,
   type CreatePlantFlow,
@@ -56,7 +56,10 @@ export interface PlantCareContextValue {
   ) => Promise<SpeciesProfile>;
   createPlant: (input: CreatePlantInput) => Promise<Plant>;
   clearStore: () => Promise<void>;
+  clearPlants: () => Promise<void>;
+  clearSpeciesCache: () => Promise<void>;
   reloadStore: () => Promise<void>;
+  getStorageFootprint: () => StorageFootprint;
 }
 
 const PlantCareServicesContext = createContext<PlantCareContextValue | undefined>(undefined);
@@ -241,11 +244,25 @@ export const PlantCareProvider = ({
     setHydrateError(null);
   }, [store]);
 
+  const clearPlants = useCallback(async () => {
+    await store.clearPlants();
+    setHydrated(true);
+    setHydrateError(null);
+  }, [store]);
+
+  const clearSpeciesCache = useCallback(async () => {
+    await store.clearSpeciesCache();
+    setHydrated(true);
+    setHydrateError(null);
+  }, [store]);
+
   const reloadStore = useCallback(async () => {
     await store.hydrate();
     setHydrated(true);
     setHydrateError(null);
   }, [store]);
+
+  const getStorageFootprint = useCallback(() => store.getStorageFootprint(), [store]);
 
   const value = useMemo<PlantCareContextValue>(
     () => ({
@@ -263,7 +280,10 @@ export const PlantCareProvider = ({
       resolvePolicy,
       createPlant: createPlantHandler,
       clearStore,
+      clearPlants,
+      clearSpeciesCache,
       reloadStore,
+      getStorageFootprint,
     }),
     [
       store,
@@ -280,7 +300,10 @@ export const PlantCareProvider = ({
       resolvePolicy,
       createPlantHandler,
       clearStore,
+      clearPlants,
+      clearSpeciesCache,
       reloadStore,
+      getStorageFootprint,
     ],
   );
 
